@@ -1,0 +1,5 @@
+
+# OXNET API
+oxnet-api/node_modules/
+oxnet-api/.wrangler/
+oxnet-api/.dev.vars

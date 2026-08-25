@@ -573,25 +573,25 @@
 
             <div class="panel">
               <div class="panel-header">
-                ACCOUNT STATUS // BACKEND PREVIEW
+                ACCOUNT STATUS // LIVE BACKEND
               </div>
 
               <div class="account-grid">
                 <div class="account-cell">
                   <span class="account-label">USER</span>
-                  GUEST
+                  <span id="accountUser">CONNECTING...</span>
                 </div>
                 <div class="account-cell">
                   <span class="account-label">SCHMECKLES</span>
-                  ---
+                  <span id="accountBalance">---</span>
                 </div>
                 <div class="account-cell">
                   <span class="account-label">TWITCH AUTH</span>
-                  NOT CONNECTED
+                  <span id="accountAuth">DEV MODE</span>
                 </div>
                 <div class="account-cell">
                   <span class="account-label">REDEMPTIONS</span>
-                  STATIC PREVIEW
+                  <span id="accountRedemptions">STATIC PREVIEW</span>
                 </div>
               </div>
             </div>
@@ -669,7 +669,7 @@
                 </div>
 
                 <div>
-                  LAST UPDATED: 08.24.2026
+                  LAST UPDATED: 08.25.2026
                 </div>
 
                 <div>
@@ -1645,6 +1645,92 @@
 
     }
 
+    async function loadAccount() {
+
+      const accountUser =
+        document.getElementById("accountUser");
+
+      const accountBalance =
+        document.getElementById("accountBalance");
+
+      const accountAuth =
+        document.getElementById("accountAuth");
+
+      const accountRedemptions =
+        document.getElementById("accountRedemptions");
+
+      try {
+
+        const response =
+          await fetch(
+            "https://oxnet-api.markalexandermcdaniel.workers.dev/balance",
+            { cache: "no-store" }
+          );
+
+        if (!response.ok) {
+          throw new Error(`Balance API returned ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        accountUser.textContent =
+          data.user || data.login || "UNKNOWN USER";
+
+        accountBalance.textContent =
+          Number(data.schmeckles || 0).toLocaleString();
+
+        accountAuth.textContent = "DEV MODE";
+        accountRedemptions.textContent = "STATIC PREVIEW";
+
+        const publicChatCommands =
+          allCommands.filter(item =>
+            normalize(item.status) === "available" &&
+            normalize(item.kind) === "chat"
+          ).length;
+
+        const paidSfx =
+          allCommands.filter(item =>
+            normalize(item.category) === "sfx" &&
+            normalize(item.status) === "available"
+          ).length;
+
+        document.getElementById("statusBox").innerHTML = `
+          CONNECTED TO OXNET_96<br>
+          MODE: LIVE BACKEND / DEV USER<br>
+          ECONOMY: SCHMECKLES<br>
+          PUBLIC CHAT CMDS: ${publicChatCommands}<br>
+          PAID SFX: ${paidSfx}<br>
+          WATCH RATE: +1 / LIVE MIN<br>
+          SFX RATE: 100 EACH<br>
+          CLOCK IN: +100 / STREAM<br>
+          FIRST CLAIM: +500<br>
+          <br>
+          BACKEND: ONLINE
+        `;
+
+      } catch (error) {
+
+        console.error("OXNET account API failed.", error);
+
+        accountUser.textContent = "OFFLINE";
+        accountBalance.textContent = "---";
+        accountAuth.textContent = "DEV MODE";
+        accountRedemptions.textContent = "UNAVAILABLE";
+
+        document.getElementById("statusBox").innerHTML = `
+          CONNECTED TO OXNET_96<br>
+          MODE: FRONTEND ONLY<br>
+          ECONOMY: SCHMECKLES<br>
+          WATCH RATE: +1 / LIVE MIN<br>
+          SFX RATE: 100 EACH<br>
+          CLOCK IN: +100 / STREAM<br>
+          FIRST CLAIM: +500<br>
+          <br>
+          BACKEND: UNREACHABLE
+        `;
+      }
+    }
+
     document
       .getElementById("searchInput")
       .addEventListener(
@@ -1660,7 +1746,7 @@
       );
 
     bindFilters();
-    loadCommands();
+    loadCommands().then(loadAccount);
 
   </script>
 
