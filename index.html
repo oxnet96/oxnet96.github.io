@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OXNET 96 // Command Database</title>
+  <title>OXNET 96 // Viewer Control Terminal</title>
 
   <style>
     * {
@@ -224,14 +224,39 @@
       font-family: "Courier New", monospace;
       font-size: 12px;
       padding: 8px;
-      min-height: 110px;
+      min-height: 145px;
       border: 2px inset #808080;
+      line-height: 1.45;
     }
 
     .main {
       display: flex;
       flex-direction: column;
       gap: 10px;
+    }
+
+    .account-grid {
+      padding: 8px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      font-family: "Courier New", monospace;
+      font-size: 12px;
+    }
+
+    .account-cell {
+      background: #111;
+      color: #00ff66;
+      border: 2px inset #808080;
+      padding: 8px;
+      min-height: 52px;
+    }
+
+    .account-label {
+      color: #aaa;
+      display: block;
+      margin-bottom: 4px;
+      font-size: 10px;
     }
 
     .toolbar {
@@ -389,6 +414,11 @@
       color: #555;
     }
 
+    .badge.kind {
+      background: #fff;
+      color: #222;
+    }
+
     .command-desc {
       font-size: 14px;
       margin-bottom: 6px;
@@ -441,6 +471,20 @@
       .toolbar {
         grid-template-columns: 1fr;
       }
+
+      .account-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .account-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .banner h1 {
+        font-size: 38px;
+      }
     }
   </style>
 </head>
@@ -453,7 +497,7 @@
 
     <div class="banner">
       <h1>OXNET 96</h1>
-      <p>COMMAND DATABASE // SEMI-FUNCTIONAL INTERNET TRASH // EST. 1996</p>
+      <p>VIEWER CONTROL TERMINAL // SCHMECKLES // SOUND FX // BAD DECISIONS</p>
     </div>
 
     <div class="win95-window">
@@ -462,7 +506,7 @@
 
         <div class="titlebar-left">
           <div class="titlebar-icon">OX</div>
-          <div>OXNET 96 // COMMAND DATABASE</div>
+          <div>OXNET 96 // VIEWER CONTROL TERMINAL</div>
         </div>
 
         <div class="titlebar-buttons">
@@ -480,13 +524,13 @@
           <div class="panel">
 
             <div class="panel-header">
-              DATABASE NAVIGATION
+              OXNET NAVIGATION
             </div>
 
             <div class="sidebar">
 
               <button class="nav-btn active" data-filter="all">
-                ALL COMMANDS
+                EVERYTHING
               </button>
 
               <button class="nav-btn" data-filter="social">
@@ -501,8 +545,8 @@
                 SFX
               </button>
 
-              <button class="nav-btn" data-filter="broadcast">
-                BROADCAST CONTROL
+              <button class="nav-btn" data-filter="redemption">
+                REDEMPTIONS
               </button>
 
               <button class="nav-btn" data-filter="planned">
@@ -511,12 +555,14 @@
 
               <div class="status-box" id="statusBox">
                 CONNECTED TO OXNET_96<br>
-                USERS ONLINE: ???<br>
-                PACKET LOSS: ACCEPTABLE<br>
-                SYSTEM STATUS: QUESTIONABLE<br>
+                MODE: STATIC PREVIEW<br>
+                ECONOMY: SCHMECKLES<br>
+                WATCH RATE: +1 / LIVE MIN<br>
+                SFX RATE: 100 EACH<br>
+                CLOCK IN: +100 / STREAM<br>
+                FIRST CLAIM: +500<br>
                 <br>
-                TYPE !commands IN CHAT<br>
-                TO GET THIS PAGE.
+                BACKEND: NOT INSTALLED
               </div>
 
             </div>
@@ -524,6 +570,31 @@
           </div>
 
           <div class="main">
+
+            <div class="panel">
+              <div class="panel-header">
+                ACCOUNT STATUS // BACKEND PREVIEW
+              </div>
+
+              <div class="account-grid">
+                <div class="account-cell">
+                  <span class="account-label">USER</span>
+                  GUEST
+                </div>
+                <div class="account-cell">
+                  <span class="account-label">SCHMECKLES</span>
+                  ---
+                </div>
+                <div class="account-cell">
+                  <span class="account-label">TWITCH AUTH</span>
+                  NOT CONNECTED
+                </div>
+                <div class="account-cell">
+                  <span class="account-label">REDEMPTIONS</span>
+                  STATIC PREVIEW
+                </div>
+              </div>
+            </div>
 
             <div class="panel">
 
@@ -537,7 +608,7 @@
                   id="searchInput"
                   class="search"
                   type="text"
-                  placeholder="search commands, descriptions, categories..."
+                  placeholder="search commands, SFX, economy, redemptions..."
                 />
 
                 <button id="findBtn" class="find-btn">
@@ -551,7 +622,7 @@
             <div class="panel mirc-window">
 
               <div class="panel-header">
-                #oxnet96_commands // mIRC COMMAND LOG
+                #oxnet96_terminal // VIEWER CONTROL DATABASE
               </div>
 
               <div class="mirc-body">
@@ -559,10 +630,10 @@
                 <div class="channel-list">
 
                   <div class="item">#general</div>
-                  <div class="item">#commands</div>
                   <div class="item">#schmeckles</div>
+                  <div class="item">#crime</div>
                   <div class="item">#sfx</div>
-                  <div class="item">#broadcast</div>
+                  <div class="item">#redemptions</div>
                   <div class="item">#retro_trash</div>
 
                 </div>
@@ -572,13 +643,13 @@
                   <div class="log-line">
                     <span class="log-time">[11:47 PM]</span>
                     <span class="log-system">***</span>
-                    Connected to OXNET 96 command database.
+                    Connected to OXNET 96 viewer control database.
                   </div>
 
                   <div class="log-line">
                     <span class="log-time">[11:47 PM]</span>
                     <span class="log-user">&lt;system&gt;</span>
-                    Search the stupid thing instead of asking the same question 40 times.
+                    Schmeckles have no cash value and somehow still encourage terrible decisions.
                   </div>
 
                   <div id="commandsContainer"></div>
@@ -598,13 +669,14 @@
                 </div>
 
                 <div>
-                  LAST UPDATED: WHATEVER
+                  LAST UPDATED: 08.24.2026
                 </div>
 
                 <div>
                   <a
                     href="https://twitch.tv/ox_king_"
                     target="_blank"
+                    rel="noopener noreferrer"
                   >
                     RETURN TO STREAM
                   </a>
@@ -627,314 +699,707 @@
   <script>
 
     const fallbackCommands = [
-
-      {
-        command: "!commands",
-        category: "social",
-        description: "Opens the OXNET 96 command center.",
-        cost: 0,
-        cooldown: "",
-        example: "!commands",
-        status: "available",
-        isNew: false
-      },
-
-      {
-        command: "!discord",
-        category: "social",
-        description: "Posts the Discord invite link.",
-        cost: 0,
-        cooldown: "",
-        example: "!discord",
-        status: "available",
-        isNew: false
-      },
-
-      {
-        command: "!so @user",
-        category: "social",
-        description: "Shouts out another streamer.",
-        cost: 0,
-        cooldown: "",
-        example: "!so @streamer",
-        status: "available",
-        isNew: false
-      },
-
-      {
-        command: "!warn @user",
-        category: "social",
-        description: "Issues the target an unnecessarily hostile but affectionate warning.",
-        cost: 0,
-        cooldown: "",
-        example: "!warn @somebody",
-        status: "available",
-        isNew: true
-      },
-
-      {
-        command: "!points",
-        category: "schmeckles",
-        description: "Checks your current Schmeckles balance.",
-        cost: 0,
-        cooldown: "",
-        example: "!points",
-        status: "available",
-        isNew: false
-      },
-
-      {
-        command: "!assman",
-        category: "sfx",
-        description: "ASSMAN.",
-        cost: 0,
-        cooldown: "",
-        example: "!assman",
-        status: "available",
-        isNew: false
-      },
-
-      {
-        command: "!buck",
-        category: "sfx",
-        description: "Plays a random clip from the BUCK collection.",
-        cost: 0,
-        cooldown: "",
-        example: "!buck",
-        status: "available",
-        isNew: false
-      },
-
-      {
-        command: "!cacaw",
-        category: "sfx",
-        description: "CACAW.",
-        cost: 0,
-        cooldown: "",
-        example: "!cacaw",
-        status: "available",
-        isNew: false
-      },
-
-      {
-        command: "!cockass",
-        category: "sfx",
-        description: "COCKASS.",
-        cost: 0,
-        cooldown: "",
-        example: "!cockass",
-        status: "available",
-        isNew: false
-      },
-
-      {
-        command: "!cunt",
-        category: "sfx",
-        description: "You already know.",
-        cost: 0,
-        cooldown: "",
-        example: "!cunt",
-        status: "available",
-        isNew: false
-      },
-
-      {
-        command: "!penis",
-        category: "sfx",
-        description: "Penis.",
-        cost: 0,
-        cooldown: "",
-        example: "!penis",
-        status: "available",
-        isNew: false
-      },
-
-      {
-        command: "!scrotum",
-        category: "sfx",
-        description: "Scrotum.",
-        cost: 0,
-        cooldown: "",
-        example: "!scrotum",
-        status: "available",
-        isNew: false
-      },
-
-      {
-        command: "!toot",
-        category: "sfx",
-        description: "Produces the required toot.",
-        cost: 0,
-        cooldown: "",
-        example: "!toot",
-        status: "available",
-        isNew: false
-      },
-
-      {
-        command: "!wipe",
-        category: "sfx",
-        description: "Plays the WIPE clip.",
-        cost: 0,
-        cooldown: "",
-        example: "!wipe",
-        status: "available",
-        isNew: false
-      },
-
-      {
-        command: "!evidence",
-        category: "broadcast",
-        description: "COMING SOON — opens a random piece of incriminating streamer-friend footage.",
-        cost: 0,
-        cooldown: "COMING SOON",
-        example: "!evidence",
-        status: "planned",
-        isNew: false
-      },
-
-      {
-        command: "!channel",
-        category: "broadcast",
-        description: "COMING SOON — hijacks the broadcast with a random nostalgia clip.",
-        cost: 0,
-        cooldown: "COMING SOON",
-        example: "!channel",
-        status: "planned",
-        isNew: false
-      },
-
-      {
-        command: "!tape",
-        category: "broadcast",
-        description: "COMING SOON — inserts a random VHS tape into the broadcast.",
-        cost: 0,
-        cooldown: "COMING SOON",
-        example: "!tape",
-        status: "planned",
-        isNew: false
-      },
-
-      {
-        command: "!remote",
-        category: "broadcast",
-        description: "COMING SOON — temporarily screws with the broadcast.",
-        cost: 0,
-        cooldown: "COMING SOON",
-        example: "!remote",
-        status: "planned",
-        isNew: false
-      },
-
-      {
-        command: "!rewind",
-        category: "broadcast",
-        description: "COMING SOON — VHS-rewinds and replays a recent stream moment.",
-        cost: 0,
-        cooldown: "COMING SOON",
-        example: "!rewind",
-        status: "planned",
-        isNew: false
-      },
-
-      {
-        command: "!bsod",
-        category: "broadcast",
-        description: "COMING SOON — crashes OXNET into a fake Windows 95 blue screen.",
-        cost: 0,
-        cooldown: "COMING SOON",
-        example: "!bsod",
-        status: "planned",
-        isNew: false
-      },
-
-      {
-        command: "!popup",
-        category: "broadcast",
-        description: "COMING SOON — throws a random Win95 popup over the stream.",
-        cost: 0,
-        cooldown: "COMING SOON",
-        example: "!popup",
-        status: "planned",
-        isNew: false
-      },
-
-      {
-        command: "!commercial",
-        category: "broadcast",
-        description: "COMING SOON — briefly interrupts the broadcast with an old commercial.",
-        cost: 0,
-        cooldown: "COMING SOON",
-        example: "!commercial",
-        status: "planned",
-        isNew: false
-      },
-
-      {
-        command: "!trivia",
-        category: "schmeckles",
-        description: "COMING SOON — trivia with Schmeckles on the line.",
-        cost: 0,
-        cooldown: "COMING SOON",
-        example: "!trivia",
-        status: "planned",
-        isNew: false
-      },
-
-      {
-        command: "!gamble <amount>",
-        category: "schmeckles",
-        description: "COMING SOON — risk some of your Schmeckles.",
-        cost: 0,
-        cooldown: "COMING SOON",
-        example: "!gamble 500",
-        status: "planned",
-        isNew: false
-      },
-
-      {
-        command: "!duel @user",
-        category: "schmeckles",
-        description: "COMING SOON — challenge another viewer with Schmeckles on the line.",
-        cost: 0,
-        cooldown: "COMING SOON",
-        example: "!duel @somebody",
-        status: "planned",
-        isNew: false
-      }
-
-    ];
-
+  {
+    "command": "!commands",
+    "category": "social",
+    "kind": "chat",
+    "description": "Opens the OXNET 96 viewer control terminal.",
+    "cost": 0,
+    "cooldown": "",
+    "example": "!commands",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!so @user",
+    "category": "social",
+    "kind": "chat",
+    "description": "Shouts out another streamer.",
+    "cost": 0,
+    "cooldown": "",
+    "example": "!so @streamer",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!warn @user",
+    "category": "social",
+    "kind": "chat",
+    "description": "Issues the target an unnecessarily hostile but affectionate warning.",
+    "cost": 0,
+    "cooldown": "",
+    "example": "!warn @somebody",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!schmeckles",
+    "category": "schmeckles",
+    "kind": "chat",
+    "description": "Checks your current Schmeckles balance.",
+    "cost": 0,
+    "cooldown": "5 SEC",
+    "example": "!schmeckles",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!points",
+    "category": "schmeckles",
+    "kind": "chat",
+    "description": "Alias for !schmeckles.",
+    "cost": 0,
+    "cooldown": "5 SEC",
+    "example": "!points",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!top",
+    "category": "schmeckles",
+    "kind": "chat",
+    "description": "Shows the top five Schmeckle balances.",
+    "cost": 0,
+    "cooldown": "10 SEC",
+    "example": "!top",
+    "status": "available",
+    "isNew": true
+  },
+  {
+    "command": "!gamble <amount|all>",
+    "category": "schmeckles",
+    "kind": "chat",
+    "description": "Gamble 10–5,000 Schmeckles. 54% lose, 44% double, 2% triple. Long-run house edge: 6%.",
+    "cost": 0,
+    "cooldown": "5 SEC",
+    "example": "!gamble 500",
+    "status": "available",
+    "isNew": true
+  },
+  {
+    "command": "!rob @user",
+    "category": "schmeckles",
+    "kind": "chat",
+    "description": "Attempt a robbery. Both users need 250+ Schmeckles. 35% success; failure burns 5–15% of your balance (max 500). Success steals 5–15% (max 1,000).",
+    "cost": 0,
+    "cooldown": "30 MIN ROBBER / 60 MIN VICTIM",
+    "example": "!rob @somebody",
+    "status": "available",
+    "isNew": true
+  },
+  {
+    "command": "CLOCK IN",
+    "category": "schmeckles",
+    "kind": "channel-point",
+    "description": "Channel Point check-in. Redeem once per stream for +100 Schmeckles.",
+    "cost": 0,
+    "cooldown": "1 / STREAM",
+    "example": "TWITCH CHANNEL POINT REWARD",
+    "status": "available",
+    "isNew": true
+  },
+  {
+    "command": "FIRST",
+    "category": "schmeckles",
+    "kind": "channel-point",
+    "description": "First viewer to punch in for the stream gets +500 Schmeckles.",
+    "cost": 0,
+    "cooldown": "FIRST CLAIM / STREAM",
+    "example": "TWITCH CHANNEL POINT REWARD",
+    "status": "available",
+    "isNew": true
+  },
+  {
+    "command": "!assman",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "ASSMAN.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!assman",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!solo",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Plays the Solo clip.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!solo",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!goulet",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Goulet.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!goulet",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!aj",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Plays the AJ clip.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!aj",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!suck",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "A concise performance review.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!suck",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!wawa",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Wawaweewa.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!wawa",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!damn",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Damnit, Bobby.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!damn",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!penis",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Penis.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!penis",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!ahhh",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "The appropriate amount of screaming.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!ahhh",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!yapper",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "For advanced-level yapping.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!yapper",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!sense",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Attempts to restore common sense. Results vary.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!sense",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!randy",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Plays the tuning/Randy clip.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!randy",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!bwahaha",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Villain-grade laughter.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!bwahaha",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!cockass",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "COCKASS.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!cockass",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!lfl",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Let's fighting love.",
+    "cost": 100,
+    "cooldown": "2 MIN + SHARED SFX COOLDOWN",
+    "example": "!lfl",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!screwaround",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "For documented screwing around.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!screwaround",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!wipe",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Plays the WIPE clip.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!wipe",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!mashin",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Mashin it.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!mashin",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!gotem",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Got em.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!gotem",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "ban",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Plays a random ban clip.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "ban",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!scrotum",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Scrotum.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!scrotum",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!phub",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Plays the Pornhub clip.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!phub",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!concentration",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "For moments requiring extreme concentration.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!concentration",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!america",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "I thought this was America.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!america",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!zap1",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Zap.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!zap1",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!cunt",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "You already know.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!cunt",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!ohshit",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Oh shit.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!ohshit",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!power",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Unlimited-ish power.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!power",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!butts",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Butts.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!butts",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!weiners",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Weiners.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!weiners",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "LUL",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Plays a random LUL clip.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "LUL",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!out",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "DBZ outro.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!out",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!aboy",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Just a boy.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!aboy",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!seabass",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Seabass.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!seabass",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!cacaw",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "CACAW.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!cacaw",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!freecrack",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Free crack.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!freecrack",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!doobies",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Doobies.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!doobies",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!buck",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Plays a random clip from the Buck collection.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!buck",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!oohwee",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Ooh wee.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!oohwee",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!9000",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Over 9000.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!9000",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!toot",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "Produces the required toot.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!toot",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "!haiya",
+    "category": "sfx",
+    "kind": "chat",
+    "description": "HAIYAA.",
+    "cost": 100,
+    "cooldown": "SHARED SFX COOLDOWN",
+    "example": "!haiya",
+    "status": "available",
+    "isNew": false
+  },
+  {
+    "command": "TRIVIA → SCHMECKLES",
+    "category": "schmeckles",
+    "kind": "planned",
+    "description": "Connect the existing Stream Quiz winner awards to the Schmeckles economy. The current trivia action still uses its older Credits variable.",
+    "cost": 0,
+    "cooldown": "COMING SOON",
+    "example": "",
+    "status": "planned",
+    "isNew": false
+  },
+  {
+    "command": "OXNET REDEMPTION CENTER",
+    "category": "redemption",
+    "kind": "portal",
+    "description": "Twitch-authenticated portal for spending Schmeckles on stream controls and larger rewards.",
+    "cost": 0,
+    "cooldown": "COMING SOON",
+    "example": "WEB PORTAL",
+    "status": "planned",
+    "isNew": false
+  },
+  {
+    "command": "CRT GLITCH",
+    "category": "redemption",
+    "kind": "portal",
+    "description": "Temporarily corrupts the broadcast with CRT/VHS-style interference.",
+    "cost": 0,
+    "cooldown": "COMING SOON",
+    "example": "OXNET PORTAL REDEMPTION",
+    "status": "planned",
+    "isNew": false
+  },
+  {
+    "command": "BSOD",
+    "category": "redemption",
+    "kind": "portal",
+    "description": "Crashes the broadcast into a fake Windows 95 blue screen.",
+    "cost": 0,
+    "cooldown": "COMING SOON",
+    "example": "OXNET PORTAL REDEMPTION",
+    "status": "planned",
+    "isNew": false
+  },
+  {
+    "command": "COMMERCIAL BREAK",
+    "category": "redemption",
+    "kind": "portal",
+    "description": "Interrupts the broadcast with a deliberately questionable retro commercial break.",
+    "cost": 0,
+    "cooldown": "COMING SOON",
+    "example": "OXNET PORTAL REDEMPTION",
+    "status": "planned",
+    "isNew": false
+  },
+  {
+    "command": "REWIND",
+    "category": "redemption",
+    "kind": "portal",
+    "description": "VHS-rewinds and replays a recent stream moment.",
+    "cost": 0,
+    "cooldown": "COMING SOON",
+    "example": "OXNET PORTAL REDEMPTION",
+    "status": "planned",
+    "isNew": false
+  },
+  {
+    "command": "REMOTE CONTROL",
+    "category": "redemption",
+    "kind": "portal",
+    "description": "A limited high-cost redemption that gives the viewer temporary influence over the show from a controlled menu.",
+    "cost": 0,
+    "cooldown": "COMING SOON",
+    "example": "OXNET PORTAL REDEMPTION",
+    "status": "planned",
+    "isNew": false
+  },
+  {
+    "command": "BAD IDEA FUND",
+    "category": "redemption",
+    "kind": "portal",
+    "description": "Community Schmeckle pool that unlocks a pre-set stream challenge when the target is reached.",
+    "cost": 0,
+    "cooldown": "COMING SOON",
+    "example": "OXNET COMMUNITY REDEMPTION",
+    "status": "planned",
+    "isNew": false
+  }
+];
 
     let allCommands = [];
     let currentFilter = "all";
 
-
     function normalize(value) {
-
       return String(value || "")
         .toLowerCase()
         .trim();
-
     }
 
+    function escapeHtml(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
 
     function categoryLabel(category) {
-
       const labels = {
-
         social: "UTILITY",
         schmeckles: "SCHMECKLES",
         sfx: "SFX",
-        broadcast: "BROADCAST"
-
+        redemption: "REDEMPTION"
       };
 
-
-      return labels[normalize(category)] || category;
-
+      return labels[normalize(category)] || String(category || "").toUpperCase();
     }
 
+    function kindLabel(kind) {
+      const labels = {
+        chat: "CHAT",
+        "channel-point": "CHANNEL POINT",
+        portal: "OXNET PORTAL",
+        planned: "SYSTEM"
+      };
+
+      return labels[normalize(kind)] || "";
+    }
 
     function renderCommands() {
 
@@ -946,51 +1411,38 @@
           document.getElementById("searchInput").value
         );
 
-
       const filtered =
         allCommands.filter(cmd => {
 
           let matchesFilter = false;
 
-
           if (currentFilter === "all") {
-
             matchesFilter = true;
-
           }
-
           else if (currentFilter === "planned") {
-
             matchesFilter =
               normalize(cmd.status) === "planned";
-
           }
-
           else {
-
             matchesFilter =
               normalize(cmd.category) === currentFilter;
-
           }
 
-
           const haystack = [
-
             cmd.command,
             cmd.category,
+            cmd.kind,
             cmd.description,
             cmd.example,
-            cmd.status
-
+            cmd.status,
+            cmd.cooldown
           ]
             .join(" ")
             .toLowerCase();
 
-
           const matchesSearch =
             !query ||
             haystack.includes(query);
-
 
           return (
             matchesFilter &&
@@ -999,19 +1451,14 @@
 
         });
 
-
       if (!filtered.length) {
-
         container.innerHTML = `
           <div class="empty">
             *** NO MATCHES FOUND. TRY AGAIN, GENIUS.
           </div>
         `;
-
         return;
-
       }
-
 
       container.innerHTML =
         filtered.map(cmd => {
@@ -1019,6 +1466,7 @@
           const planned =
             normalize(cmd.status) === "planned";
 
+          const kind = kindLabel(cmd.kind);
 
           return `
 
@@ -1027,18 +1475,27 @@
               <div class="command-title">
 
                 <div class="command-name">
-                  ${cmd.command}
+                  ${escapeHtml(cmd.command)}
                 </div>
 
                 <span class="badge ${planned ? "planned" : "status"}">
                   ${planned ? "COMING SOON" : categoryLabel(cmd.category)}
                 </span>
 
+                ${kind
+                  ? `
+                    <span class="badge kind">
+                      ${escapeHtml(kind)}
+                    </span>
+                  `
+                  : ""
+                }
+
                 ${
                   Number(cmd.cost || 0) > 0
                     ? `
                       <span class="badge cost">
-                        ${cmd.cost} SCHMECKLES
+                        ${escapeHtml(cmd.cost)} SCHMECKLES
                       </span>
                     `
                     : ""
@@ -1049,7 +1506,7 @@
                   normalize(cmd.cooldown) !== "coming soon"
                     ? `
                       <span class="badge cooldown">
-                        ${cmd.cooldown}
+                        ${escapeHtml(cmd.cooldown)}
                       </span>
                     `
                     : ""
@@ -1068,14 +1525,14 @@
               </div>
 
               <div class="command-desc">
-                ${cmd.description || ""}
+                ${escapeHtml(cmd.description || "")}
               </div>
 
               ${
                 cmd.example
                   ? `
                     <div class="command-example">
-                      &gt; ${cmd.example}
+                      &gt; ${escapeHtml(cmd.example)}
                     </div>
                   `
                   : ""
@@ -1090,12 +1547,10 @@
 
     }
 
-
     function bindFilters() {
 
       const buttons =
         document.querySelectorAll(".nav-btn");
-
 
       buttons.forEach(btn => {
 
@@ -1108,13 +1563,10 @@
                 button.classList.remove("active")
             );
 
-
             btn.classList.add("active");
-
 
             currentFilter =
               btn.dataset.filter;
-
 
             renderCommands();
 
@@ -1125,6 +1577,33 @@
 
     }
 
+    function updateStatus() {
+      const publicChatCommands =
+        allCommands.filter(item =>
+          normalize(item.status) === "available" &&
+          normalize(item.kind) === "chat"
+        ).length;
+
+      const paidSfx =
+        allCommands.filter(item =>
+          normalize(item.category) === "sfx" &&
+          normalize(item.status) === "available"
+        ).length;
+
+      document.getElementById("statusBox").innerHTML = `
+        CONNECTED TO OXNET_96<br>
+        MODE: STATIC PREVIEW<br>
+        ECONOMY: SCHMECKLES<br>
+        PUBLIC CHAT CMDS: ${publicChatCommands}<br>
+        PAID SFX: ${paidSfx}<br>
+        WATCH RATE: +1 / LIVE MIN<br>
+        SFX RATE: 100 EACH<br>
+        CLOCK IN: +100 / STREAM<br>
+        FIRST CLAIM: +500<br>
+        <br>
+        BACKEND: NOT INSTALLED
+      `;
+    }
 
     async function loadCommands() {
 
@@ -1138,15 +1617,11 @@
             }
           );
 
-
         if (!response.ok) {
-
           throw new Error(
             "commands.json failed to load"
           );
-
         }
-
 
         allCommands =
           await response.json();
@@ -1160,17 +1635,15 @@
           error
         );
 
-
         allCommands =
           fallbackCommands;
 
       }
 
-
+      updateStatus();
       renderCommands();
 
     }
-
 
     document
       .getElementById("searchInput")
@@ -1179,7 +1652,6 @@
         renderCommands
       );
 
-
     document
       .getElementById("findBtn")
       .addEventListener(
@@ -1187,9 +1659,7 @@
         renderCommands
       );
 
-
     bindFilters();
-
     loadCommands();
 
   </script>
