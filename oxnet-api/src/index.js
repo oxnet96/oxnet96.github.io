@@ -551,6 +551,234 @@ export default {
 
     /*
       ==================================================
+      STREAMER.BOT BALANCE SYNC
+      ==================================================
+    */
+
+    if (url.pathname === "/bridge/sync-balance") {
+
+      if (request.method !== "POST") {
+        return new Response(
+          JSON.stringify({
+            error: "Method not allowed"
+          }),
+          {
+            status: 405,
+            headers
+          }
+        );
+      }
+
+      const authorization =
+        request.headers.get("Authorization");
+
+      if (
+        authorization !==
+        `Bearer ${env.BRIDGE_SECRET}`
+      ) {
+        return new Response(
+          JSON.stringify({
+            error: "Unauthorized"
+          }),
+          {
+            status: 401,
+            headers
+          }
+        );
+      }
+
+      try {
+        const body =
+          await request.json();
+
+        const twitchUserId =
+          String(
+            body.twitch_user_id || ""
+          ).trim();
+
+        const twitchLogin =
+          String(
+            body.twitch_login || ""
+          ).trim();
+
+        const twitchDisplayName =
+          String(
+            body.twitch_display_name ||
+            twitchLogin
+          ).trim();
+
+        const schmeckles =
+          Number(
+            body.schmeckles
+          );
+
+        if (
+          !twitchUserId ||
+          !twitchLogin ||
+          !Number.isInteger(schmeckles) ||
+          schmeckles < 0
+        ) {
+          return new Response(
+            JSON.stringify({
+              error: "Invalid sync payload"
+            }),
+            {
+              status: 400,
+              headers
+            }
+          );
+        }
+
+        const users = await sql`
+          insert into users (
+            twitch_user_id,
+            twitch_login,
+            twitch_display_name,
+            last_seen_at
+          )
+          values (
+            ${twitchUserId},
+            ${twitchLogin},
+            ${twitchDisplayName},
+            now()
+          )
+
+          on conflict (twitch_user_id)
+
+          do update set
+            twitch_login =
+              excluded.twitch_login,
+
+            twitch_display_name =
+              excluded.twitch_display_name,
+
+            last_seen_at =
+              now()
+
+          returning id
+        `;
+
+        const userId =
+          users[0].id;
+
+        await sql`
+          insert into balances (
+            user_id,
+            schmeckles,
+            synced_at
+          )
+          values (
+            ${userId},
+            ${schmeckles},
+            now()
+          )
+
+          on conflict (user_id)
+
+          do update set
+            schmeckles =
+              excluded.schmeckles,
+
+            synced_at =
+              now()
+        `;
+
+        return new Response(
+          JSON.stringify({
+            success: true,
+            twitch_user_id:
+              twitchUserId,
+            twitch_login:
+              twitchLogin,
+            schmeckles
+          }),
+          {
+            status: 200,
+            headers
+          }
+        );
+      }
+
+      catch (error) {
+        console.error(
+          "Bridge balance sync failed:",
+          error
+        );
+
+        return new Response(
+          JSON.stringify({
+            error:
+              "Balance sync failed"
+          }),
+          {
+            status: 500,
+            headers
+          }
+        );
+      }
+    }
+
+    /*
+  ==================================================
+  REDEMPTION CATALOG
+  ==================================================
+*/
+
+    if (url.pathname === "/redemptions") {
+      try {
+        const rows = await sql`
+      select
+        redemption_key,
+        name,
+        description,
+        category,
+        cost,
+        cooldown_seconds,
+        enabled
+      from redemptions
+      where enabled = true
+      order by cost asc
+    `;
+
+        return new Response(
+          JSON.stringify({
+            redemptions: rows.map(item => ({
+              key: item.redemption_key,
+              name: item.name,
+              description: item.description,
+              category: item.category,
+              cost: Number(item.cost),
+              cooldown_seconds: item.cooldown_seconds,
+              enabled: item.enabled
+            }))
+          }),
+          {
+            status: 200,
+            headers
+          }
+        );
+      }
+
+      catch (error) {
+        console.error(
+          "Redemption catalog failed:",
+          error
+        );
+
+        return new Response(
+          JSON.stringify({
+            error: "Redemption catalog failed"
+          }),
+          {
+            status: 500,
+            headers
+          }
+        );
+      }
+    }
+
+    /*
+      ==================================================
       TEMP DEV BALANCE ENDPOINT
       ==================================================
 

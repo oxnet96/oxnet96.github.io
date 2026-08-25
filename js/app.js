@@ -7,10 +7,18 @@ import {
   loadAccount
 } from "./account.js";
 
+import {
+  loadRedemptions
+} from "./redemptions.js";
+
 async function startOxnet() {
   bindCommandUI();
 
-  await loadCommands();
+  await Promise.all([
+    loadCommands(),
+    loadRedemptions()
+  ]);
+
   await loadAccount();
 }
 
