@@ -33,7 +33,6 @@ function kindLabel(kind) {
     chat: "CHAT",
     "channel-point": "CHANNEL POINT",
     portal: "OXNET PORTAL",
-    redemption: "OXNET PORTAL",
     planned: "SYSTEM"
   };
 
@@ -133,42 +132,46 @@ export function renderCommands() {
               ${planned ? "COMING SOON" : categoryLabel(cmd.category)}
             </span>
 
-            ${kind
-          ? `
+            ${
+              kind
+                ? `
                   <span class="badge kind">
                     ${escapeHtml(kind)}
                   </span>
                 `
-          : ""
-        }
+                : ""
+            }
 
-            ${Number(cmd.cost || 0) > 0
-          ? `
+            ${
+              Number(cmd.cost || 0) > 0
+                ? `
                   <span class="badge cost">
                     ${escapeHtml(cmd.cost)} SCHMECKLES
                   </span>
                 `
-          : ""
-        }
+                : ""
+            }
 
-            ${cmd.cooldown &&
-          normalize(cmd.cooldown) !== "coming soon"
-          ? `
+            ${
+              cmd.cooldown &&
+              normalize(cmd.cooldown) !== "coming soon"
+                ? `
                   <span class="badge cooldown">
                     ${escapeHtml(cmd.cooldown)}
                   </span>
                 `
-          : ""
-        }
+                : ""
+            }
 
-            ${cmd.isNew
-          ? `
+            ${
+              cmd.isNew
+                ? `
                   <span class="badge new">
                     NEW
                   </span>
                 `
-          : ""
-        }
+                : ""
+            }
 
           </div>
 
@@ -176,46 +179,20 @@ export function renderCommands() {
             ${escapeHtml(cmd.description || "")}
           </div>
 
-          ${normalize(cmd.kind) === "redemption"
-          ? `
-      <button
-        class="find-btn redemption-btn"
-        data-redemption-key="${escapeHtml(cmd.redemption_key || "")}"
-        disabled
-      >
-        REDEEM
-      </button>
-    `
-          : ""
-        }
-
-          ${cmd.example
-          ? `
+          ${
+            cmd.example
+              ? `
                 <div class="command-example">
                   &gt; ${escapeHtml(cmd.example)}
                 </div>
               `
-          : ""
-        }
+              : ""
+          }
 
         </div>
       `;
     })
       .join("");
-}
-
-export function mergeCommands(items = []) {
-  if (!Array.isArray(items)) {
-    return;
-  }
-
-  allCommands = [
-    ...allCommands,
-    ...items
-  ];
-
-  updateStatus();
-  renderCommands();
 }
 
 export function bindCommandUI() {
