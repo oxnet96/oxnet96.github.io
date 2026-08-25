@@ -1,0 +1,475 @@
+* {
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg: #0c6b68;
+      --teal: #008080;
+      --win-gray: #c0c0c0;
+      --win-dark: #808080;
+      --win-black: #000000;
+      --win-white: #ffffff;
+      --blue: #000080;
+      --dirty: #e8e0cb;
+      --orange: #d08042;
+      --red: #a43c34;
+      --magenta: #d32fd3;
+      --cyan: #00d7e6;
+      --green: #1bff6a;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--dirty);
+      font-family: "MS Sans Serif", Tahoma, Arial, sans-serif;
+      min-height: 100%;
+    }
+
+    body {
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255, 255, 255, .06), transparent 24%),
+        radial-gradient(circle at 80% 0%, rgba(255, 255, 255, .05), transparent 18%),
+        linear-gradient(to bottom, rgba(255, 255, 255, .03), rgba(0, 0, 0, .08)),
+        var(--bg);
+    }
+
+    #noise {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .10;
+      background:
+        repeating-linear-gradient(to bottom,
+          transparent 0px,
+          transparent 3px,
+          rgba(255, 255, 255, .06) 4px);
+    }
+
+    .page {
+      max-width: 1180px;
+      margin: 22px auto;
+      padding: 0 12px 40px;
+    }
+
+    .banner {
+      margin-bottom: 14px;
+      color: var(--dirty);
+      text-align: center;
+    }
+
+    .banner h1 {
+      margin: 0 0 6px;
+      font-size: 48px;
+      line-height: 1;
+      font-family:
+        "Segoe Print",
+        "Bradley Hand ITC",
+        "Comic Sans MS",
+        cursive;
+      font-weight: 900;
+      text-transform: uppercase;
+      transform: rotate(-1deg) skew(-4deg);
+      text-shadow:
+        -4px 2px 0 rgba(211, 47, 211, .8),
+        4px -1px 0 rgba(0, 215, 230, .8),
+        7px 6px 0 rgba(0, 0, 0, .6);
+    }
+
+    .banner p {
+      margin: 0;
+      font-family: "Courier New", monospace;
+      letter-spacing: 2px;
+      font-size: 14px;
+    }
+
+    .win95-window {
+      background: var(--win-gray);
+      border-top: 2px solid var(--win-white);
+      border-left: 2px solid var(--win-white);
+      border-right: 2px solid var(--win-black);
+      border-bottom: 2px solid var(--win-black);
+      box-shadow:
+        inset 1px 1px 0 #dfdfdf,
+        inset -1px -1px 0 var(--win-dark),
+        0 10px 30px rgba(0, 0, 0, .25);
+    }
+
+    .titlebar {
+      background: linear-gradient(to right, #000080, #1084d0);
+      color: white;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 6px;
+      font-weight: bold;
+      font-size: 13px;
+    }
+
+    .titlebar-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .titlebar-icon {
+      width: 16px;
+      height: 16px;
+      background: var(--dirty);
+      border: 1px solid #000;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #000;
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    .titlebar-buttons {
+      display: flex;
+      gap: 3px;
+    }
+
+    .win-btn {
+      width: 18px;
+      height: 16px;
+      background: var(--win-gray);
+      border-top: 1px solid var(--win-white);
+      border-left: 1px solid var(--win-white);
+      border-right: 1px solid var(--win-black);
+      border-bottom: 1px solid var(--win-black);
+      color: #000;
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .content {
+      padding: 10px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 220px 1fr;
+      gap: 10px;
+    }
+
+    .panel {
+      background: #d4d0c8;
+      border-top: 2px solid var(--win-white);
+      border-left: 2px solid var(--win-white);
+      border-right: 2px solid var(--win-dark);
+      border-bottom: 2px solid var(--win-dark);
+      color: #000;
+    }
+
+    .panel-header {
+      background: #bcb8b0;
+      border-bottom: 1px solid #8a8a8a;
+      font-size: 12px;
+      font-weight: bold;
+      padding: 6px 8px;
+    }
+
+    .sidebar {
+      padding: 8px;
+    }
+
+    .nav-btn {
+      width: 100%;
+      margin-bottom: 6px;
+      padding: 8px 10px;
+      text-align: left;
+      background: #d4d0c8;
+      border-top: 2px solid var(--win-white);
+      border-left: 2px solid var(--win-white);
+      border-right: 2px solid var(--win-dark);
+      border-bottom: 2px solid var(--win-dark);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .nav-btn:hover {
+      background: #cac6be;
+    }
+
+    .nav-btn.active {
+      background: #b8b2a8;
+      border-top: 2px solid var(--win-dark);
+      border-left: 2px solid var(--win-dark);
+      border-right: 2px solid var(--win-white);
+      border-bottom: 2px solid var(--win-white);
+    }
+
+    .status-box {
+      margin-top: 10px;
+      background: #111;
+      color: #00ff66;
+      font-family: "Courier New", monospace;
+      font-size: 12px;
+      padding: 8px;
+      min-height: 145px;
+      border: 2px inset #808080;
+      line-height: 1.45;
+    }
+
+    .main {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .account-grid {
+      padding: 8px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      font-family: "Courier New", monospace;
+      font-size: 12px;
+    }
+
+    .account-cell {
+      background: #111;
+      color: #00ff66;
+      border: 2px inset #808080;
+      padding: 8px;
+      min-height: 52px;
+    }
+
+    .account-label {
+      color: #aaa;
+      display: block;
+      margin-bottom: 4px;
+      font-size: 10px;
+    }
+
+    .toolbar {
+      padding: 8px;
+      display: grid;
+      grid-template-columns: 1fr 120px;
+      gap: 8px;
+    }
+
+    .search {
+      width: 100%;
+      padding: 7px 8px;
+      font-family: "Courier New", monospace;
+      border: 2px inset #808080;
+      background: #fff;
+      color: #000;
+    }
+
+    .find-btn {
+      padding: 7px 8px;
+      font-weight: bold;
+      cursor: pointer;
+      background: #d4d0c8;
+      border-top: 2px solid var(--win-white);
+      border-left: 2px solid var(--win-white);
+      border-right: 2px solid var(--win-dark);
+      border-bottom: 2px solid var(--win-dark);
+    }
+
+    .mirc-window {
+      background: #cfc7b7;
+      padding: 0;
+    }
+
+    .mirc-body {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      min-height: 520px;
+    }
+
+    .channel-list {
+      background: #e4dccd;
+      border-right: 2px groove #999;
+      padding: 8px;
+      font-family: "Courier New", monospace;
+      font-size: 12px;
+      color: #222;
+    }
+
+    .channel-list .item {
+      margin-bottom: 6px;
+      padding: 4px 6px;
+      background: rgba(255, 255, 255, .25);
+    }
+
+    .chat-log {
+      background: #fffdf8;
+      color: #000;
+      padding: 10px;
+      overflow: hidden;
+    }
+
+    .log-line {
+      margin-bottom: 8px;
+      font-family: "Courier New", monospace;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .log-time {
+      color: #7a7a7a;
+    }
+
+    .log-user {
+      color: #0000aa;
+      font-weight: bold;
+    }
+
+    .log-system {
+      color: #cc3300;
+      font-weight: bold;
+    }
+
+    .command-card {
+      margin: 14px 0;
+      padding: 10px 12px;
+      background:
+        linear-gradient(to bottom,
+          rgba(255, 255, 255, .65),
+          rgba(230, 223, 209, .85));
+      border-left: 5px solid var(--red);
+      border-top: 1px solid rgba(255, 255, 255, .7);
+      border-right: 1px solid rgba(0, 0, 0, .18);
+      border-bottom: 1px solid rgba(0, 0, 0, .18);
+      box-shadow: 3px 3px 0 rgba(0, 0, 0, .12);
+    }
+
+    .command-card.planned {
+      opacity: .72;
+      border-left-color: #777;
+    }
+
+    .command-title {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .command-name {
+      font-size: 22px;
+      color: #111;
+      font-weight: 900;
+      font-family:
+        "Segoe Print",
+        "Bradley Hand ITC",
+        "Comic Sans MS",
+        cursive;
+      text-shadow:
+        -2px 1px 0 rgba(211, 47, 211, .45),
+        2px -1px 0 rgba(0, 215, 230, .45);
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 7px;
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      border: 1px solid #000;
+      background: #eee;
+    }
+
+    .badge.cost {
+      background: #ffe0a8;
+    }
+
+    .badge.cooldown {
+      background: #cce4ff;
+    }
+
+    .badge.new {
+      background: #ff7cf5;
+    }
+
+    .badge.status {
+      background: #b6ffb6;
+    }
+
+    .badge.planned {
+      background: #d4d0c8;
+      color: #555;
+    }
+
+    .badge.kind {
+      background: #fff;
+      color: #222;
+    }
+
+    .command-desc {
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    .command-example {
+      font-family: "Courier New", monospace;
+      background: rgba(0, 0, 0, .85);
+      color: #00ff66;
+      padding: 6px 8px;
+      font-size: 12px;
+      border: 2px inset #666;
+    }
+
+    .footer {
+      margin-top: 12px;
+      padding: 8px 10px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      font-size: 12px;
+      color: #111;
+    }
+
+    a {
+      color: #0000aa;
+    }
+
+    .empty {
+      font-family: "Courier New", monospace;
+      color: #aa0000;
+      font-weight: bold;
+      padding: 10px 0;
+    }
+
+    @media (max-width: 900px) {
+      .topbar {
+        grid-template-columns: 1fr;
+      }
+
+      .mirc-body {
+        grid-template-columns: 1fr;
+      }
+
+      .channel-list {
+        display: none;
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .account-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .account-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .banner h1 {
+        font-size: 38px;
+      }
+    }
