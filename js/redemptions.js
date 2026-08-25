@@ -3,7 +3,7 @@ import {
 } from "./config.js";
 
 import {
-  escapeHtml
+  mergeCommands
 } from "./commands.js";
 
 
@@ -12,7 +12,7 @@ function formatCooldown(seconds) {
     Number(seconds || 0);
 
   if (value <= 0) {
-    return "";
+    return "NO COOLDOWN";
   }
 
   if (value < 60) {
@@ -33,88 +33,7 @@ function formatCooldown(seconds) {
 }
 
 
-function renderRedemptions(redemptions) {
-  const container =
-    document.getElementById(
-      "redemptionContainer"
-    );
-
-  if (!redemptions.length) {
-    container.innerHTML = `
-      <div class="empty">
-        *** NO REDEMPTIONS AVAILABLE.
-      </div>
-    `;
-
-    return;
-  }
-
-
-  container.innerHTML =
-    redemptions.map(item => {
-
-      const cooldown =
-        formatCooldown(
-          item.cooldown_seconds
-        );
-
-      return `
-        <div class="command-card">
-
-          <div class="command-title">
-
-            <div class="command-name">
-              ${escapeHtml(item.name)}
-            </div>
-
-            <span class="badge status">
-              REDEMPTION
-            </span>
-
-            <span class="badge cost">
-              ${Number(item.cost).toLocaleString()}
-              SCHMECKLES
-            </span>
-
-            ${
-              cooldown
-                ? `
-                  <span class="badge cooldown">
-                    ${escapeHtml(cooldown)}
-                  </span>
-                `
-                : ""
-            }
-
-          </div>
-
-          <div class="command-desc">
-            ${escapeHtml(
-              item.description || ""
-            )}
-          </div>
-
-          <button
-            class="find-btn redemption-btn"
-            data-redemption-key="${escapeHtml(item.key)}"
-            disabled
-          >
-            REDEEM
-          </button>
-
-        </div>
-      `;
-    })
-      .join("");
-}
-
-
 export async function loadRedemptions() {
-  const container =
-    document.getElementById(
-      "redemptionContainer"
-    );
-
   try {
     const response =
       await fetch(
@@ -124,34 +43,37 @@ export async function loadRedemptions() {
         }
       );
 
-
     if (!response.ok) {
       throw new Error(
         `Redemption API returned ${response.status}`
       );
     }
 
-
     const data =
       await response.json();
 
+    const items =
+      (data.redemptions || []).map(item => ({
+        name: item.name,
+        command: item.name,
+        description: item.description || "",
+        category: "redemption",
+        kind: "redemption",
+        status: "LIVE",
+        cost: Number(item.cost),
+        cooldown: formatCooldown(
+          item.cooldown_seconds
+        ),
+        redemption_key: item.key,
+        source: "neon"
+      }));
 
-    renderRedemptions(
-      data.redemptions || []
-    );
+    mergeCommands(items);
 
-  }
-
-  catch (error) {
+  } catch (error) {
     console.error(
       "OXNET redemption catalog failed.",
       error
     );
-
-    container.innerHTML = `
-      <div class="empty">
-        *** REDEMPTION DATABASE UNAVAILABLE.
-      </div>
-    `;
   }
 }
