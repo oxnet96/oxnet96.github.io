@@ -14,11 +14,13 @@ import {
 async function startOxnet() {
   bindCommandUI();
 
-  await Promise.all([
-    loadCommands(),
-    loadRedemptions()
-  ]);
+  // Load the static command database first, then merge the
+  // live Neon redemption catalog into the same UI.
+  await loadCommands();
+  await loadRedemptions();
 
+  // Account status runs last so the status panel reflects
+  // the final command/redemption counts.
   await loadAccount();
 }
 

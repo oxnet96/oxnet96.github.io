@@ -3,16 +3,23 @@ import {
 } from "./config.js";
 
 import {
-  escapeHtml
+  mergeCommands
 } from "./commands.js";
 
+const CHAT_COMMANDS = {
+  crt_glitch: "!crt",
+  bsod: "!bsod",
+  commercial_break: "!commercial",
+  rewind: "!rewind",
+  remote_control: "!remote"
+};
 
 function formatCooldown(seconds) {
   const value =
     Number(seconds || 0);
 
   if (value <= 0) {
-    return "";
+    return "NO COOLDOWN";
   }
 
   if (value < 60) {
@@ -32,89 +39,18 @@ function formatCooldown(seconds) {
   return `${minutes} MIN COOLDOWN`;
 }
 
-
-function renderRedemptions(redemptions) {
-  const container =
-    document.getElementById(
-      "redemptionContainer"
-    );
-
-  if (!redemptions.length) {
-    container.innerHTML = `
-      <div class="empty">
-        *** NO REDEMPTIONS AVAILABLE.
-      </div>
-    `;
-
-    return;
+function commandFor(item) {
+  if (CHAT_COMMANDS[item.key]) {
+    return CHAT_COMMANDS[item.key];
   }
 
-
-  container.innerHTML =
-    redemptions.map(item => {
-
-      const cooldown =
-        formatCooldown(
-          item.cooldown_seconds
-        );
-
-      return `
-        <div class="command-card">
-
-          <div class="command-title">
-
-            <div class="command-name">
-              ${escapeHtml(item.name)}
-            </div>
-
-            <span class="badge status">
-              REDEMPTION
-            </span>
-
-            <span class="badge cost">
-              ${Number(item.cost).toLocaleString()}
-              SCHMECKLES
-            </span>
-
-            ${
-              cooldown
-                ? `
-                  <span class="badge cooldown">
-                    ${escapeHtml(cooldown)}
-                  </span>
-                `
-                : ""
-            }
-
-          </div>
-
-          <div class="command-desc">
-            ${escapeHtml(
-              item.description || ""
-            )}
-          </div>
-
-          <button
-            class="find-btn redemption-btn"
-            data-redemption-key="${escapeHtml(item.key)}"
-            disabled
-          >
-            REDEEM
-          </button>
-
-        </div>
-      `;
-    })
-      .join("");
+  return `!${String(item.key || "redeem")
+    .toLowerCase()
+    .replaceAll(/[^a-z0-9]+/g, "-")
+    .replaceAll(/^-+|-+$/g, "")}`;
 }
 
-
 export async function loadRedemptions() {
-  const container =
-    document.getElementById(
-      "redemptionContainer"
-    );
-
   try {
     const response =
       await fetch(
@@ -124,34 +60,45 @@ export async function loadRedemptions() {
         }
       );
 
-
     if (!response.ok) {
       throw new Error(
         `Redemption API returned ${response.status}`
       );
     }
 
-
     const data =
       await response.json();
 
+    const items =
+      (data.redemptions || []).map(item => {
+        const chatCommand =
+          commandFor(item);
 
-    renderRedemptions(
-      data.redemptions || []
-    );
+        return {
+          name: item.name,
+          command: chatCommand,
+          category: "redemption",
+          kind: "chat-redemption",
+          description: item.description || "",
+          cost: Number(item.cost || 0),
+          cooldown: formatCooldown(
+            item.cooldown_seconds
+          ),
+          example:
+            `REDEEM IN TWITCH CHAT: ${chatCommand}`,
+          status: "available",
+          isNew: false,
+          redemption_key: item.key,
+          source: "neon-redemption"
+        };
+      });
 
+    mergeCommands(items);
   }
-
   catch (error) {
     console.error(
       "OXNET redemption catalog failed.",
       error
     );
-
-    container.innerHTML = `
-      <div class="empty">
-        *** REDEMPTION DATABASE UNAVAILABLE.
-      </div>
-    `;
   }
 }

@@ -31,6 +31,7 @@ function categoryLabel(category) {
 function kindLabel(kind) {
   const labels = {
     chat: "CHAT",
+    "chat-redemption": "TWITCH CHAT",
     "channel-point": "CHANNEL POINT",
     portal: "OXNET PORTAL",
     planned: "SYSTEM"
@@ -59,10 +60,15 @@ export function renderCommands() {
   const container =
     document.getElementById("commandsContainer");
 
+  const searchInput =
+    document.getElementById("searchInput");
+
+  if (!container || !searchInput) {
+    return;
+  }
+
   const query =
-    normalize(
-      document.getElementById("searchInput").value
-    );
+    normalize(searchInput.value);
 
   const filtered =
     allCommands.filter(cmd => {
@@ -81,6 +87,7 @@ export function renderCommands() {
       }
 
       const haystack = [
+        cmd.name,
         cmd.command,
         cmd.category,
         cmd.kind,
@@ -100,7 +107,16 @@ export function renderCommands() {
         matchesFilter &&
         matchesSearch
       );
-    });
+    })
+      .sort((a, b) => {
+        const aPlanned =
+          normalize(a.status) === "planned" ? 1 : 0;
+
+        const bPlanned =
+          normalize(b.status) === "planned" ? 1 : 0;
+
+        return aPlanned - bPlanned;
+      });
 
   if (!filtered.length) {
     container.innerHTML = `
@@ -119,13 +135,18 @@ export function renderCommands() {
       const kind =
         kindLabel(cmd.kind);
 
+      const displayName =
+        cmd.name ||
+        cmd.command ||
+        "UNKNOWN";
+
       return `
         <div class="command-card ${planned ? "planned" : ""}">
 
           <div class="command-title">
 
             <div class="command-name">
-              ${escapeHtml(cmd.command)}
+              ${escapeHtml(displayName)}
             </div>
 
             <span class="badge ${planned ? "planned" : "status"}">
@@ -146,7 +167,7 @@ export function renderCommands() {
               Number(cmd.cost || 0) > 0
                 ? `
                   <span class="badge cost">
-                    ${escapeHtml(cmd.cost)} SCHMECKLES
+                    ${Number(cmd.cost).toLocaleString()} SCHMECKLES
                   </span>
                 `
                 : ""
@@ -195,6 +216,22 @@ export function renderCommands() {
       .join("");
 }
 
+export function mergeCommands(items = []) {
+  if (!Array.isArray(items)) {
+    return;
+  }
+
+  allCommands = [
+    ...allCommands.filter(item =>
+      normalize(item.source) !== "neon-redemption"
+    ),
+    ...items
+  ];
+
+  updateStatus();
+  renderCommands();
+}
+
 export function bindCommandUI() {
   const buttons =
     document.querySelectorAll(".nav-btn");
@@ -218,19 +255,25 @@ export function bindCommandUI() {
     );
   });
 
-  document
-    .getElementById("searchInput")
-    .addEventListener(
+  const searchInput =
+    document.getElementById("searchInput");
+
+  const findBtn =
+    document.getElementById("findBtn");
+
+  if (searchInput) {
+    searchInput.addEventListener(
       "input",
       renderCommands
     );
+  }
 
-  document
-    .getElementById("findBtn")
-    .addEventListener(
+  if (findBtn) {
+    findBtn.addEventListener(
       "click",
       renderCommands
     );
+  }
 }
 
 export function updateStatus() {
@@ -239,18 +282,25 @@ export function updateStatus() {
     paidSfx
   } = getCommandStats();
 
-  document.getElementById("statusBox").innerHTML = `
+  const statusBox =
+    document.getElementById("statusBox");
+
+  if (!statusBox) {
+    return;
+  }
+
+  statusBox.innerHTML = `
     CONNECTED TO OXNET_96<br>
-    MODE: STATIC PREVIEW<br>
     ECONOMY: SCHMECKLES<br>
     PUBLIC CHAT CMDS: ${publicChatCommands}<br>
     PAID SFX: ${paidSfx}<br>
+    REDEEM: TWITCH CHAT<br>
     WATCH RATE: +1 / LIVE MIN<br>
     SFX RATE: 100 EACH<br>
     CLOCK IN: +100 / STREAM<br>
     FIRST CLAIM: +500<br>
     <br>
-    BACKEND: NOT INSTALLED
+    BACKEND: CONNECTING
   `;
 }
 
@@ -284,21 +334,27 @@ export async function loadCommands() {
 
     allCommands = [];
 
-    document
-      .getElementById("statusBox")
-      .innerHTML = `
+    const statusBox =
+      document.getElementById("statusBox");
+
+    const container =
+      document.getElementById("commandsContainer");
+
+    if (statusBox) {
+      statusBox.innerHTML = `
         CONNECTED TO OXNET_96<br>
         COMMAND DATABASE: UNAVAILABLE<br>
         <br>
         BACKEND: DEGRADED
       `;
+    }
 
-    document
-      .getElementById("commandsContainer")
-      .innerHTML = `
+    if (container) {
+      container.innerHTML = `
         <div class="empty">
           *** COMMAND DATABASE FAILED TO LOAD.
         </div>
       `;
+    }
   }
 }
