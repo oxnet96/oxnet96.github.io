@@ -8,22 +8,90 @@ import {
   getCommandStats
 } from "./commands.js";
 
+function setLoggedOutState(message = "NOT CONNECTED") {
+  document.getElementById("accountUser").textContent =
+    "GUEST";
+
+  document.getElementById("accountBalance").textContent =
+    "---";
+
+  document.getElementById("accountAuth").textContent =
+    message;
+
+  document.getElementById("accountRedemptions").textContent =
+    "LOGIN REQUIRED";
+
+  const authButton =
+    document.getElementById("authButton");
+
+  authButton.textContent =
+    "LOGIN WITH TWITCH";
+
+  authButton.onclick = () => {
+    window.location.href =
+      `${API_URL}/auth/twitch`;
+  };
+}
+
+function setLoggedInState(data) {
+  document.getElementById("accountUser").textContent =
+    data.user ||
+    data.login ||
+    "UNKNOWN USER";
+
+  document.getElementById("accountBalance").textContent =
+    Number(
+      data.schmeckles || 0
+    ).toLocaleString();
+
+  document.getElementById("accountAuth").textContent =
+    "TWITCH CONNECTED";
+
+  document.getElementById("accountRedemptions").textContent =
+    "ONLINE";
+
+  const authButton =
+    document.getElementById("authButton");
+
+  authButton.textContent =
+    "LOG OUT";
+
+  authButton.onclick = () => {
+    localStorage.removeItem(
+      SESSION_KEY
+    );
+
+    window.location.reload();
+  };
+}
+
+function updateOnlineStatus(data) {
+  const {
+    publicChatCommands,
+    paidSfx
+  } = getCommandStats();
+
+  document
+    .getElementById("statusBox")
+    .innerHTML = `
+      CONNECTED TO OXNET_96<br>
+      USER: ${escapeHtml(data.login)}<br>
+      ECONOMY: SCHMECKLES<br>
+      PUBLIC CHAT CMDS: ${publicChatCommands}<br>
+      PAID SFX: ${paidSfx}<br>
+      WATCH RATE: +1 / LIVE MIN<br>
+      SFX RATE: 100 EACH<br>
+      CLOCK IN: +100 / STREAM<br>
+      FIRST CLAIM: +500<br>
+      <br>
+      BACKEND: ONLINE
+    `;
+}
+
 export async function loadAccount() {
-  const accountUser =
-    document.getElementById("accountUser");
-
-  const accountBalance =
-    document.getElementById("accountBalance");
-
-  const accountAuth =
-    document.getElementById("accountAuth");
-
-  const accountRedemptions =
-    document.getElementById("accountRedemptions");
 
   /*
-    If Twitch just redirected us back with a
-    new session, save it and clean the URL.
+    Capture Twitch session after redirect.
   */
 
   const hash =
@@ -32,7 +100,9 @@ export async function loadAccount() {
   if (hash.startsWith("#session=")) {
     const session =
       decodeURIComponent(
-        hash.substring("#session=".length)
+        hash.substring(
+          "#session=".length
+        )
       );
 
     localStorage.setItem(
@@ -48,33 +118,58 @@ export async function loadAccount() {
     );
   }
 
+
+  /*
+    Handle Twitch auth failure/denial.
+  */
+
+  if (hash === "#auth=denied") {
+    history.replaceState(
+      null,
+      "",
+      window.location.pathname
+    );
+
+    setLoggedOutState(
+      "LOGIN CANCELLED"
+    );
+
+    return;
+  }
+
+  if (hash === "#auth=error") {
+    history.replaceState(
+      null,
+      "",
+      window.location.pathname
+    );
+
+    setLoggedOutState(
+      "LOGIN ERROR"
+    );
+
+    return;
+  }
+
+
   const session =
     localStorage.getItem(
       SESSION_KEY
     );
 
+
   /*
-    No Twitch login yet.
+    Viewer is not logged in.
   */
 
   if (!session) {
-    accountUser.textContent =
-      "GUEST";
-
-    accountBalance.textContent =
-      "---";
-
-    accountAuth.textContent =
-      "NOT CONNECTED";
-
-    accountRedemptions.textContent =
-      "LOGIN REQUIRED";
-
+    setLoggedOutState();
     return;
   }
 
+
   /*
-    Ask OXNET API who this session belongs to.
+    Ask OXNET API who owns this session.
   */
 
   try {
@@ -91,25 +186,19 @@ export async function loadAccount() {
         }
       );
 
+
     if (response.status === 401) {
       localStorage.removeItem(
         SESSION_KEY
       );
 
-      accountUser.textContent =
-        "GUEST";
-
-      accountBalance.textContent =
-        "---";
-
-      accountAuth.textContent =
-        "SESSION EXPIRED";
-
-      accountRedemptions.textContent =
-        "LOGIN REQUIRED";
+      setLoggedOutState(
+        "SESSION EXPIRED"
+      );
 
       return;
     }
+
 
     if (!response.ok) {
       throw new Error(
@@ -117,62 +206,50 @@ export async function loadAccount() {
       );
     }
 
+
     const data =
       await response.json();
 
-    accountUser.textContent =
-      data.user ||
-      data.login ||
-      "UNKNOWN USER";
 
-    accountBalance.textContent =
-      Number(
-        data.schmeckles || 0
-      ).toLocaleString();
+    setLoggedInState(data);
+    updateOnlineStatus(data);
 
-    accountAuth.textContent =
-      "TWITCH CONNECTED";
-
-    accountRedemptions.textContent =
-      "ONLINE";
-
-    const {
-      publicChatCommands,
-      paidSfx
-    } = getCommandStats();
-
-    document
-      .getElementById("statusBox")
-      .innerHTML = `
-        CONNECTED TO OXNET_96<br>
-        USER: ${escapeHtml(data.login)}<br>
-        ECONOMY: SCHMECKLES<br>
-        PUBLIC CHAT CMDS: ${publicChatCommands}<br>
-        PAID SFX: ${paidSfx}<br>
-        WATCH RATE: +1 / LIVE MIN<br>
-        SFX RATE: 100 EACH<br>
-        CLOCK IN: +100 / STREAM<br>
-        FIRST CLAIM: +500<br>
-        <br>
-        BACKEND: ONLINE
-      `;
   }
+
   catch (error) {
     console.error(
       "OXNET account lookup failed.",
       error
     );
 
-    accountUser.textContent =
+    document
+      .getElementById("accountUser")
+      .textContent =
       "OFFLINE";
 
-    accountBalance.textContent =
+    document
+      .getElementById("accountBalance")
+      .textContent =
       "---";
 
-    accountAuth.textContent =
+    document
+      .getElementById("accountAuth")
+      .textContent =
       "CONNECTION ERROR";
 
-    accountRedemptions.textContent =
+    document
+      .getElementById("accountRedemptions")
+      .textContent =
       "UNAVAILABLE";
+
+    const authButton =
+      document.getElementById("authButton");
+
+    authButton.textContent =
+      "RETRY";
+
+    authButton.onclick = () => {
+      window.location.reload();
+    };
   }
 }
