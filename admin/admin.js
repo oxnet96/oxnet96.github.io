@@ -11,19 +11,67 @@ function getSession () {
 }
 
 
+function escapeHtml (value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;')
+}
+
+
+async function adminFetch (
+  path,
+  options = {}
+) {
+  const session =
+    getSession()
+
+  const headers = {
+    ...(options.headers || {}),
+    Authorization:
+      `Bearer ${session}`
+  }
+
+  if (
+    options.body &&
+    !headers['Content-Type']
+  ) {
+    headers['Content-Type'] =
+      'application/json'
+  }
+
+  return fetch(
+    `${API_URL}${path}`,
+    {
+      ...options,
+      headers,
+      cache: 'no-store'
+    }
+  )
+}
+
+
 function showDenied (
   message = 'ADMIN ACCESS REQUIRED'
 ) {
   document
-    .getElementById('adminAuthPanel')
+    .getElementById(
+      'adminAuthPanel'
+    )
     .hidden = true
 
   document
-    .getElementById('adminControlPanel')
+    .getElementById(
+      'adminControlPanel'
+    )
     .hidden = true
 
   document
-    .getElementById('adminDeniedPanel')
+    .getElementById(
+      'adminDeniedPanel'
+    )
     .hidden = false
 
   const deniedPanel =
@@ -31,39 +79,50 @@ function showDenied (
       'adminDeniedPanel'
     )
 
-  const status =
+  const header =
     deniedPanel.querySelector(
       '.panel-header'
     )
 
-  if (status) {
-    status.textContent = message
+  if (header) {
+    header.textContent =
+      message
   }
 }
 
 
 function showAdmin (data) {
   document
-    .getElementById('adminAuthPanel')
+    .getElementById(
+      'adminAuthPanel'
+    )
     .hidden = true
 
   document
-    .getElementById('adminDeniedPanel')
+    .getElementById(
+      'adminDeniedPanel'
+    )
     .hidden = true
 
   document
-    .getElementById('adminControlPanel')
+    .getElementById(
+      'adminControlPanel'
+    )
     .hidden = false
 
   document
-    .getElementById('adminUser')
+    .getElementById(
+      'adminUser'
+    )
     .textContent =
       data.user ||
       data.login ||
       'OXNET ADMIN'
 
   document
-    .getElementById('adminApiStatus')
+    .getElementById(
+      'adminApiStatus'
+    )
     .textContent =
       'ONLINE'
 }
@@ -84,7 +143,7 @@ function bindNavigation () {
 
     button.addEventListener(
       'click',
-      () => {
+      async () => {
 
         buttons.forEach(btn =>
           btn.classList.remove(
@@ -115,6 +174,10 @@ function bindNavigation () {
 
         if (targetView) {
           targetView.hidden = false
+        }
+
+        if (target === 'games') {
+          await loadAdminGames()
         }
       }
     )
@@ -173,24 +236,315 @@ function bindButtons () {
 }
 
 
-async function loadDashboard () {
+function renderAdminGames (games) {
+  const container =
+    document.getElementById(
+      'adminGameQueue'
+    )
+
+  if (!container) {
+    return
+  }
+
+  if (!games.length) {
+    container.innerHTML = `
+      <div class="empty">
+        *** PROGRAMMING QUEUE EMPTY.
+        <br><br>
+        FOR ONCE, NOBODY HAS MADE
+        A TERRIBLE REQUEST.
+      </div>
+    `
+
+    return
+  }
+
+  container.innerHTML =
+    games.map(game => {
+
+      const playing =
+        game.status === 'playing'
+
+      return `
+        <div class="command-card">
+
+          <div class="command-title">
+
+            <div class="command-name">
+              ${
+                playing
+                  ? '▶ NOW PLAYING'
+                  : `#${game.position}`
+              }
+              //
+              ${escapeHtml(game.game_name)}
+            </div>
+
+            <span class="badge ${
+              playing
+                ? 'status'
+                : 'kind'
+            }">
+              ${
+                playing
+                  ? 'PLAYING'
+                  : 'QUEUED'
+              }
+            </span>
+
+            <span class="badge">
+              REQUEST ID:
+              ${game.id}
+            </span>
+
+          </div>
+
+
+          <div class="command-desc">
+            REQUESTED BY:
+            ${escapeHtml(
+              game.requested_by
+            )}
+          </div>
+
+
+          <div
+            style="
+              display: flex;
+              flex-wrap: wrap;
+              gap: 6px;
+              margin-top: 12px;
+            "
+          >
+
+            ${
+              !playing
+                ? `
+                  <button
+                    class="find-btn"
+                    data-game-action="playing"
+                    data-request-id="${game.id}"
+                  >
+                    ▶ PLAY
+                  </button>
+                `
+                : ''
+            }
+
+            <button
+              class="find-btn"
+              data-game-action="completed"
+              data-request-id="${game.id}"
+            >
+              ✓ COMPLETE
+            </button>
+
+            <button
+              class="find-btn"
+              data-game-action="removed"
+              data-request-id="${game.id}"
+            >
+              X REMOVE
+            </button>
+
+            <button
+              class="find-btn"
+              data-game-action="rejected"
+              data-request-id="${game.id}"
+            >
+              REJECT
+            </button>
+
+          </div>
+
+        </div>
+      `
+    })
+      .join('')
+}
+
+
+async function loadAdminGames () {
+  const container =
+    document.getElementById(
+      'adminGameQueue'
+    )
+
+  if (!container) {
+    return
+  }
+
+  container.innerHTML =
+    'LOADING OXNET PROGRAMMING DATABASE...'
+
   try {
     const response =
-      await fetch(
-        `${API_URL}/game-queue`,
-        {
-          cache: 'no-store'
-        }
+      await adminFetch(
+        '/admin/games'
       )
-
-    if (!response.ok) {
-      throw new Error(
-        `Queue returned ${response.status}`
-      )
-    }
 
     const data =
       await response.json()
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+        `HTTP ${response.status}`
+      )
+    }
+
+    const games =
+      data.games || []
+
+    renderAdminGames(
+      games
+    )
+
+    document
+      .getElementById(
+        'adminGameCount'
+      )
+      .textContent =
+        games.length
+          .toLocaleString()
+
+  } catch (error) {
+    console.error(
+      'Admin game queue failed.',
+      error
+    )
+
+    container.innerHTML = `
+      <div class="empty">
+        *** PROGRAMMING DATABASE FAILURE.
+        <br><br>
+        ${escapeHtml(error.message)}
+      </div>
+    `
+  }
+}
+
+
+async function updateGameStatus (
+  requestId,
+  status
+) {
+  const destructive =
+    [
+      'completed',
+      'removed',
+      'rejected'
+    ].includes(status)
+
+  if (destructive) {
+    const confirmed =
+      window.confirm(
+        `Set request ID ${requestId} to ${status.toUpperCase()}?`
+      )
+
+    if (!confirmed) {
+      return
+    }
+  }
+
+  try {
+    const response =
+      await adminFetch(
+        '/admin/games/status',
+        {
+          method: 'POST',
+
+          body:
+            JSON.stringify({
+              request_id:
+                Number(requestId),
+
+              status
+            })
+        }
+      )
+
+    const data =
+      await response.json()
+
+    if (!response.ok) {
+      window.alert(
+        data.error ||
+        'OXNET rejected the update.'
+      )
+
+      return
+    }
+
+    await loadAdminGames()
+
+  } catch (error) {
+    console.error(
+      'Admin game update failed.',
+      error
+    )
+
+    window.alert(
+      'OXNET fell down the stairs. Try again.'
+    )
+  }
+}
+
+
+function bindGameActions () {
+  const container =
+    document.getElementById(
+      'adminGameQueue'
+    )
+
+  if (!container) {
+    return
+  }
+
+  container.addEventListener(
+    'click',
+    event => {
+
+      const button =
+        event.target.closest(
+          '[data-game-action]'
+        )
+
+      if (!button) {
+        return
+      }
+
+      const requestId =
+        button.dataset.requestId
+
+      const action =
+        button.dataset.gameAction
+
+      updateGameStatus(
+        requestId,
+        action
+      )
+    }
+  )
+}
+
+
+async function loadDashboard () {
+  try {
+    const response =
+      await adminFetch(
+        '/admin/games'
+      )
+
+    const data =
+      await response.json()
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+        `HTTP ${response.status}`
+      )
+    }
 
     document
       .getElementById(
@@ -203,7 +557,7 @@ async function loadDashboard () {
 
   } catch (error) {
     console.error(
-      'Admin dashboard queue lookup failed.',
+      'Admin dashboard failed.',
       error
     )
 
@@ -231,16 +585,8 @@ async function verifyAdmin () {
 
   try {
     const response =
-      await fetch(
-        `${API_URL}/admin/me`,
-        {
-          cache: 'no-store',
-
-          headers: {
-            Authorization:
-              `Bearer ${session}`
-          }
-        }
+      await adminFetch(
+        '/admin/me'
       )
 
     const data =
@@ -289,6 +635,7 @@ async function verifyAdmin () {
 function startAdmin () {
   bindNavigation()
   bindButtons()
+  bindGameActions()
   verifyAdmin()
 }
 
