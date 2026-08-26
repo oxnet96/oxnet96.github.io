@@ -1,220 +1,191 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OXNET 96 // Viewer Control Terminal</title>
+    <link rel="stylesheet" href="./css/oxnet.css" />
+  </head>
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>OXNET 96 // Viewer Control Terminal</title>
-  <link rel="stylesheet" href="./css/oxnet.css" />
-</head>
+  <body>
+    <div id="noise"></div>
 
-<body>
-
-  <div id="noise"></div>
-
-  <div class="page">
-
-    <div class="banner">
-      <h1>OXNET 96</h1>
-      <p>VIEWER CONTROL TERMINAL // SCHMECKLES // SOUND FX // BAD DECISIONS</p>
-    </div>
-
-    <div class="win95-window">
-
-      <div class="titlebar">
-
-        <div class="titlebar-left">
-          <div class="titlebar-icon">OX</div>
-          <div>OXNET 96 // VIEWER CONTROL TERMINAL</div>
-        </div>
-
-        <div class="titlebar-buttons">
-          <div class="win-btn">_</div>
-          <div class="win-btn">□</div>
-          <div class="win-btn">×</div>
-        </div>
-
+    <div class="page">
+      <div class="banner">
+        <h1>OXNET 96</h1>
+        <p>
+          VIEWER CONTROL TERMINAL // SCHMECKLES // SOUND FX // BAD DECISIONS
+        </p>
       </div>
 
-      <div class="content">
-
-        <div class="topbar">
-
-          <div class="panel">
-
-            <div class="panel-header">
-              OXNET NAVIGATION
-            </div>
-
-            <div class="sidebar">
-
-              <button class="nav-btn active" data-filter="all">
-                EVERYTHING
-              </button>
-
-              <button class="nav-btn" data-filter="social">
-                UTILITY
-              </button>
-
-              <button class="nav-btn" data-filter="schmeckles">
-                SCHMECKLES
-              </button>
-
-              <button class="nav-btn" data-filter="sfx">
-                SFX
-              </button>
-
-              <button class="nav-btn" data-filter="redemption">
-                REDEMPTIONS
-              </button>
-
-              <button class="nav-btn" data-filter="planned">
-                COMING SOON
-              </button>
-
-              <div class="status-box" id="statusBox">
-                CONNECTED TO OXNET_96<br>
-                ECONOMY: SCHMECKLES<br>
-                REDEEM: TWITCH CHAT<br>
-                WATCH RATE: +1 / LIVE MIN<br>
-                SFX RATE: 100 EACH<br>
-                CLOCK IN: +100 / STREAM<br>
-                FIRST CLAIM: +500<br>
-                <br>
-                BACKEND: CONNECTING
-              </div>
-
-            </div>
-
+      <div class="win95-window">
+        <div class="titlebar">
+          <div class="titlebar-left">
+            <div class="titlebar-icon">OX</div>
+            <div>OXNET 96 // VIEWER CONTROL TERMINAL</div>
           </div>
 
-          <div class="main">
+          <div class="titlebar-buttons">
+            <div class="win-btn">_</div>
+            <div class="win-btn">□</div>
+            <div class="win-btn">×</div>
+          </div>
+        </div>
 
+        <div class="content">
+          <div class="topbar">
             <div class="panel">
-              <div class="panel-header">
-                ACCOUNT STATUS // LIVE BACKEND
-              </div>
+              <div class="panel-header">OXNET NAVIGATION</div>
 
-              <div class="account-grid">
-                <div class="account-cell">
-                  <span class="account-label">USER</span>
-                  <span id="accountUser">CONNECTING...</span>
-                </div>
-                <div class="account-cell">
-                  <span class="account-label">SCHMECKLES</span>
-                  <span id="accountBalance">---</span>
-                </div>
-                <div class="account-cell">
-                  <span class="account-label">TWITCH AUTH</span>
-                  <span id="accountAuth">CONNECTING...</span>
-                </div>
-                <div class="account-cell">
-                  <span class="account-label">REDEEM VIA</span>
-                  <span id="accountRedemptions">TWITCH CHAT</span>
-                </div>
-                <div class="account-cell">
-                  <span class="account-label">ACCOUNT</span>
-                  <button id="authButton" class="find-btn">
-                    CONNECTING...
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <div class="panel">
-
-              <div class="panel-header">
-                SEARCH DATABASE
-              </div>
-
-              <div class="toolbar">
-
-                <input id="searchInput" class="search" type="text"
-                  placeholder="search commands, SFX, economy, redemptions..." />
-
-                <button id="findBtn" class="find-btn">
-                  FIND
+              <div class="sidebar">
+                <button class="nav-btn active" data-filter="all">
+                  EVERYTHING
                 </button>
 
-              </div>
+                <button class="nav-btn" data-filter="social">UTILITY</button>
 
+                <button class="nav-btn" data-filter="schmeckles">
+                  SCHMECKLES
+                </button>
+
+                <button class="nav-btn" data-filter="sfx">SFX</button>
+
+                <button class="nav-btn" data-filter="redemption">
+                  REDEMPTIONS
+                </button>
+
+                <button class="nav-btn" id="gameQueueBtn">GAME QUEUE</button>
+
+                <button class="nav-btn" data-filter="planned">
+                  COMING SOON
+                </button>
+
+                <div class="status-box" id="statusBox">
+                  CONNECTED TO OXNET_96<br />
+                  ECONOMY: SCHMECKLES<br />
+                  REDEEM: TWITCH CHAT<br />
+                  WATCH RATE: +1 / LIVE MIN<br />
+                  SFX RATE: 100 EACH<br />
+                  CLOCK IN: +100 / STREAM<br />
+                  FIRST CLAIM: +500<br />
+                  <br />
+                  BACKEND: CONNECTING
+                </div>
+              </div>
             </div>
 
-            <div class="panel mirc-window">
+            <div class="main">
+              <div class="panel">
+                <div class="panel-header">ACCOUNT STATUS // LIVE BACKEND</div>
 
-              <div class="panel-header">
-                #oxnet96_terminal // VIEWER CONTROL DATABASE
+                <div class="account-grid">
+                  <div class="account-cell">
+                    <span class="account-label">USER</span>
+                    <span id="accountUser">CONNECTING...</span>
+                  </div>
+                  <div class="account-cell">
+                    <span class="account-label">SCHMECKLES</span>
+                    <span id="accountBalance">---</span>
+                  </div>
+                  <div class="account-cell">
+                    <span class="account-label">TWITCH AUTH</span>
+                    <span id="accountAuth">CONNECTING...</span>
+                  </div>
+                  <div class="account-cell">
+                    <span class="account-label">REDEEM VIA</span>
+                    <span id="accountRedemptions">TWITCH CHAT</span>
+                  </div>
+                  <div class="account-cell">
+                    <span class="account-label">ACCOUNT</span>
+                    <button id="authButton" class="find-btn">
+                      CONNECTING...
+                    </button>
+                  </div>
+                </div>
               </div>
 
-              <div class="mirc-body">
+              <div class="panel" id="searchPanel">
+                <div class="panel-header">SEARCH DATABASE</div>
 
-                <div class="channel-list">
+                <div class="toolbar">
+                  <input
+                    id="searchInput"
+                    class="search"
+                    type="text"
+                    placeholder="search commands, SFX, economy, redemptions..."
+                  />
 
-                  <div class="item">#general</div>
-                  <div class="item">#schmeckles</div>
-                  <div class="item">#crime</div>
-                  <div class="item">#sfx</div>
-                  <div class="item">#redemptions</div>
-                  <div class="item">#retro_trash</div>
+                  <button id="findBtn" class="find-btn">FIND</button>
+                </div>
+              </div>
 
+              <div class="panel" id="gameQueuePanel" hidden>
+                <div class="panel-header">
+                  OXNET PROGRAMMING // GAME REQUEST QUEUE
                 </div>
 
-                <div class="chat-log">
+                <div id="gameQueueContainer" style="padding: 10px">
+                  CONNECTING TO OXNET PROGRAMMING...
+                </div>
+              </div>
 
-                  <div class="log-line">
-                    <span class="log-time">[11:47 PM]</span>
-                    <span class="log-system">***</span>
-                    Connected to OXNET 96 viewer control database.
+              <div class="panel mirc-window" id="commandDatabasePanel">
+                <div class="panel-header">
+                  #oxnet96_terminal // VIEWER CONTROL DATABASE
+                </div>
+
+                <div class="mirc-body">
+                  <div class="channel-list">
+                    <div class="item">#general</div>
+                    <div class="item">#schmeckles</div>
+                    <div class="item">#crime</div>
+                    <div class="item">#sfx</div>
+                    <div class="item">#redemptions</div>
+                    <div class="item">#retro_trash</div>
                   </div>
 
-                  <div class="log-line">
-                    <span class="log-time">[11:47 PM]</span>
-                    <span class="log-user">&lt;system&gt;</span>
-                    Schmeckles have no cash value and somehow still encourage terrible decisions.
+                  <div class="chat-log">
+                    <div class="log-line">
+                      <span class="log-time">[11:47 PM]</span>
+                      <span class="log-system">***</span>
+                      Connected to OXNET 96 viewer control database.
+                    </div>
+
+                    <div class="log-line">
+                      <span class="log-time">[11:47 PM]</span>
+                      <span class="log-user">&lt;system&gt;</span>
+                      Schmeckles have no cash value and somehow still encourage
+                      terrible decisions.
+                    </div>
+
+                    <div id="commandsContainer"></div>
                   </div>
-
-                  <div id="commandsContainer"></div>
-
                 </div>
-
               </div>
 
-            </div>
+              <div class="panel">
+                <div class="footer">
+                  <div>VISITOR #00000666</div>
 
-            <div class="panel">
+                  <div>LAST UPDATED: 08.25.2026</div>
 
-              <div class="footer">
-
-                <div>
-                  VISITOR #00000666
+                  <div>
+                    <a
+                      href="https://twitch.tv/ox_king_"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      RETURN TO STREAM
+                    </a>
+                  </div>
                 </div>
-
-                <div>
-                  LAST UPDATED: 08.25.2026
-                </div>
-
-                <div>
-                  <a href="https://twitch.tv/ox_king_" target="_blank" rel="noopener noreferrer">
-                    RETURN TO STREAM
-                  </a>
-                </div>
-
               </div>
-
             </div>
-
           </div>
-
         </div>
-
       </div>
-
     </div>
 
-  </div>
-
-  <script type="module" src="./js/app.js"></script>
-
-</body>
-
+    <script type="module" src="./js/app.js"></script>
+  </body>
 </html>
