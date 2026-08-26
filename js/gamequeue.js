@@ -1,16 +1,9 @@
-import {
-  API_URL
-} from './config.js'
+import { API_URL } from './config.js'
 
-import {
-  escapeHtml
-} from './commands.js'
+import { escapeHtml } from './commands.js'
 
 function renderQueue (games) {
-  const container =
-    document.getElementById(
-      'gameQueueContainer'
-    )
+  const container = document.getElementById('gameQueueContainer')
 
   if (!container) {
     return
@@ -29,11 +22,9 @@ function renderQueue (games) {
     return
   }
 
-  container.innerHTML =
-    games.map(game => {
-
-      const playing =
-        game.status === 'playing'
+  container.innerHTML = games
+    .map(game => {
+      const playing = game.status === 'playing'
 
       return `
         <div class="command-card">
@@ -41,29 +32,17 @@ function renderQueue (games) {
           <div class="command-title">
 
             <div class="command-name">
-              ${
-                playing
-                  ? '▶ NOW PLAYING'
-                  : `#${game.position}`
-              }
+              ${playing ? '▶ NOW PLAYING' : `#${game.position}`}
               // ${escapeHtml(game.game_name)}
             </div>
 
-            <span class="badge ${
-              playing
-                ? 'status'
-                : 'kind'
-            }">
-              ${
-                playing
-                  ? 'PLAYING'
-                  : 'QUEUED'
-              }
+            <span class="badge ${playing ? 'status' : 'kind'}">
+              ${playing ? 'PLAYING' : 'QUEUED'}
             </span>
 
             <span class="badge">
-              REQUEST #${game.id}
-            </span>
+  REQUEST ID: ${game.id}
+</span>
 
           </div>
 
@@ -73,54 +52,37 @@ function renderQueue (games) {
           </div>
 
           <div class="command-example">
-            &gt; PRIORITY:
-            ${Number(game.priority || 0)}
-          </div>
+  &gt; JUMP THIS GAME:
+  !jumpgame ${game.id}
+</div>
 
         </div>
       `
     })
-      .join('')
+    .join('')
 }
 
-
 export async function loadGameQueue () {
-  const container =
-    document.getElementById(
-      'gameQueueContainer'
-    )
+  const container = document.getElementById('gameQueueContainer')
 
   if (!container) {
     return
   }
 
   try {
-    const response =
-      await fetch(
-        `${API_URL}/game-queue`,
-        {
-          cache: 'no-store'
-        }
-      )
+    const response = await fetch(`${API_URL}/game-queue`, {
+      cache: 'no-store'
+    })
 
     if (!response.ok) {
-      throw new Error(
-        `Game queue returned ${response.status}`
-      )
+      throw new Error(`Game queue returned ${response.status}`)
     }
 
-    const data =
-      await response.json()
+    const data = await response.json()
 
-    renderQueue(
-      data.games || []
-    )
-  }
-  catch (error) {
-    console.error(
-      'OXNET game queue failed.',
-      error
-    )
+    renderQueue(data.games || [])
+  } catch (error) {
+    console.error('OXNET game queue failed.', error)
 
     container.innerHTML = `
       <div class="empty">
