@@ -5,6 +5,7 @@ import { handleAccountRoutes } from './routes/account.js'
 import { handleBalanceRoutes } from './routes/balances.js'
 import { handleRedemptionRoutes } from './routes/redemptions.js'
 import { handleGameRoutes } from './routes/games.js'
+import { handleAdminRoutes } from './routes/admin.js'
 
 export default {
   async fetch (request, env) {
@@ -30,7 +31,8 @@ export default {
       handleAccountRoutes,
       handleBalanceRoutes,
       handleRedemptionRoutes,
-      handleGameRoutes
+      handleGameRoutes,
+      handleAdminRoutes
     ]
 
     for (const handler of handlers) {
