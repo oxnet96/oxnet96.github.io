@@ -6,12 +6,14 @@ import { loadRedemptions } from "./redemptions.js";
 
 import { loadGameQueue } from "./gamequeue.js";
 
-import { loadGameLibrary } from "./gamelibrary.js";
+import { loadGameLibrary, loadCompletedGames } from "./gamelibrary.js";
 
 function hideSpecialViews() {
   const gameQueuePanel = document.getElementById("gameQueuePanel");
 
   const gameLibraryPanel = document.getElementById("gameLibraryPanel");
+
+  const completedGamesPanel = document.getElementById("completedGamesPanel");
 
   if (gameQueuePanel) {
     gameQueuePanel.hidden = true;
@@ -19,6 +21,10 @@ function hideSpecialViews() {
 
   if (gameLibraryPanel) {
     gameLibraryPanel.hidden = true;
+  }
+
+  if (completedGamesPanel) {
+    completedGamesPanel.hidden = true;
   }
 }
 
@@ -108,10 +114,43 @@ function showGameLibrary() {
   loadGameLibrary();
 }
 
+function showCompletedGames() {
+  const searchPanel = document.getElementById("searchPanel");
+
+  const commandPanel = document.getElementById("commandDatabasePanel");
+
+  const completedGamesPanel = document.getElementById("completedGamesPanel");
+
+  const completedGamesBtn = document.getElementById("completedGamesBtn");
+
+  if (searchPanel) {
+    searchPanel.hidden = true;
+  }
+
+  if (commandPanel) {
+    commandPanel.hidden = true;
+  }
+
+  hideSpecialViews();
+  clearNavigation();
+
+  if (completedGamesPanel) {
+    completedGamesPanel.hidden = false;
+  }
+
+  if (completedGamesBtn) {
+    completedGamesBtn.classList.add("active");
+  }
+
+  loadCompletedGames();
+}
+
 function bindViewSwitching() {
   const gameQueueBtn = document.getElementById("gameQueueBtn");
 
   const gameLibraryBtn = document.getElementById("gameLibraryBtn");
+
+  const completedGamesBtn = document.getElementById("completedGamesBtn");
 
   const filterButtons = document.querySelectorAll(".nav-btn[data-filter]");
 
@@ -121,6 +160,10 @@ function bindViewSwitching() {
 
   if (gameLibraryBtn) {
     gameLibraryBtn.addEventListener("click", showGameLibrary);
+  }
+
+  if (completedGamesBtn) {
+    completedGamesBtn.addEventListener("click", showCompletedGames);
   }
 
   filterButtons.forEach((button) => {
