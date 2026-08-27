@@ -1,187 +1,214 @@
-import { bindCommandUI, loadCommands } from "./commands.js";
+import { bindCommandUI, loadCommands } from './commands.js'
 
-import { loadAccount } from "./account.js";
+import { loadAccount } from './account.js'
 
-import { loadRedemptions } from "./redemptions.js";
+import { loadRedemptions } from './redemptions.js'
 
-import { loadGameQueue } from "./gamequeue.js";
+import { loadGameQueue } from './gamequeue.js'
 
-import { loadGameLibrary, loadCompletedGames } from "./gamelibrary.js";
+import { loadGameLibrary, loadCompletedGames } from './gamelibrary.js'
 
-function hideSpecialViews() {
-  const gameQueuePanel = document.getElementById("gameQueuePanel");
+function hideSpecialViews () {
+  const gameQueuePanel = document.getElementById('gameQueuePanel')
 
-  const gameLibraryPanel = document.getElementById("gameLibraryPanel");
+  const gameLibraryPanel = document.getElementById('gameLibraryPanel')
 
-  const completedGamesPanel = document.getElementById("completedGamesPanel");
+  const completedGamesPanel = document.getElementById('completedGamesPanel')
 
   if (gameQueuePanel) {
-    gameQueuePanel.hidden = true;
+    gameQueuePanel.hidden = true
   }
 
   if (gameLibraryPanel) {
-    gameLibraryPanel.hidden = true;
+    gameLibraryPanel.hidden = true
   }
 
   if (completedGamesPanel) {
-    completedGamesPanel.hidden = true;
+    completedGamesPanel.hidden = true
   }
 }
 
-function clearNavigation() {
-  document.querySelectorAll(".nav-btn").forEach((button) => {
-    button.classList.remove("active");
-  });
+function clearNavigation () {
+  document.querySelectorAll('.nav-btn').forEach(button => {
+    button.classList.remove('active')
+  })
 }
 
-function showCommandDatabase() {
-  const searchPanel = document.getElementById("searchPanel");
+function scrollToMobileContent (element) {
+  if (!element) {
+    return
+  }
 
-  const commandPanel = document.getElementById("commandDatabasePanel");
+  if (!window.matchMedia('(max-width: 900px)').matches) {
+    return
+  }
 
-  hideSpecialViews();
+  requestAnimationFrame(() => {
+    element.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    })
+  })
+}
+
+function showCommandDatabase () {
+  const searchPanel = document.getElementById('searchPanel')
+
+  const commandPanel = document.getElementById('commandDatabasePanel')
+
+  hideSpecialViews()
 
   if (searchPanel) {
-    searchPanel.hidden = false;
+    searchPanel.hidden = false
   }
 
   if (commandPanel) {
-    commandPanel.hidden = false;
+    commandPanel.hidden = false
   }
 
-  clearNavigation();
+  clearNavigation()
 }
 
-function showGameQueue() {
-  const searchPanel = document.getElementById("searchPanel");
+function showGameQueue () {
+  const searchPanel = document.getElementById('searchPanel')
 
-  const commandPanel = document.getElementById("commandDatabasePanel");
+  const commandPanel = document.getElementById('commandDatabasePanel')
 
-  const gameQueuePanel = document.getElementById("gameQueuePanel");
+  const gameQueuePanel = document.getElementById('gameQueuePanel')
 
-  const gameQueueBtn = document.getElementById("gameQueueBtn");
+  const gameQueueBtn = document.getElementById('gameQueueBtn')
 
   if (searchPanel) {
-    searchPanel.hidden = true;
+    searchPanel.hidden = true
   }
 
   if (commandPanel) {
-    commandPanel.hidden = true;
+    commandPanel.hidden = true
   }
 
-  hideSpecialViews();
-  clearNavigation();
+  hideSpecialViews()
+  clearNavigation()
 
   if (gameQueuePanel) {
-    gameQueuePanel.hidden = false;
+    gameQueuePanel.hidden = false
   }
 
   if (gameQueueBtn) {
-    gameQueueBtn.classList.add("active");
+    gameQueueBtn.classList.add('active')
   }
 
-  loadGameQueue();
+  loadGameQueue()
+
+  scrollToMobileContent(gameQueuePanel)
 }
 
-function showGameLibrary() {
-  const searchPanel = document.getElementById("searchPanel");
+function showGameLibrary () {
+  const searchPanel = document.getElementById('searchPanel')
 
-  const commandPanel = document.getElementById("commandDatabasePanel");
+  const commandPanel = document.getElementById('commandDatabasePanel')
 
-  const gameLibraryPanel = document.getElementById("gameLibraryPanel");
+  const gameLibraryPanel = document.getElementById('gameLibraryPanel')
 
-  const gameLibraryBtn = document.getElementById("gameLibraryBtn");
+  const gameLibraryBtn = document.getElementById('gameLibraryBtn')
 
   if (searchPanel) {
-    searchPanel.hidden = true;
+    searchPanel.hidden = true
   }
 
   if (commandPanel) {
-    commandPanel.hidden = true;
+    commandPanel.hidden = true
   }
 
-  hideSpecialViews();
-  clearNavigation();
+  hideSpecialViews()
+  clearNavigation()
 
   if (gameLibraryPanel) {
-    gameLibraryPanel.hidden = false;
+    gameLibraryPanel.hidden = false
   }
 
   if (gameLibraryBtn) {
-    gameLibraryBtn.classList.add("active");
+    gameLibraryBtn.classList.add('active')
   }
 
-  loadGameLibrary();
+  loadGameLibrary()
+
+  scrollToMobileContent(gameLibraryPanel)
 }
 
-function showCompletedGames() {
-  const searchPanel = document.getElementById("searchPanel");
+function showCompletedGames () {
+  const searchPanel = document.getElementById('searchPanel')
 
-  const commandPanel = document.getElementById("commandDatabasePanel");
+  const commandPanel = document.getElementById('commandDatabasePanel')
 
-  const completedGamesPanel = document.getElementById("completedGamesPanel");
+  const completedGamesPanel = document.getElementById('completedGamesPanel')
 
-  const completedGamesBtn = document.getElementById("completedGamesBtn");
+  const completedGamesBtn = document.getElementById('completedGamesBtn')
 
   if (searchPanel) {
-    searchPanel.hidden = true;
+    searchPanel.hidden = true
   }
 
   if (commandPanel) {
-    commandPanel.hidden = true;
+    commandPanel.hidden = true
   }
 
-  hideSpecialViews();
-  clearNavigation();
+  hideSpecialViews()
+  clearNavigation()
 
   if (completedGamesPanel) {
-    completedGamesPanel.hidden = false;
+    completedGamesPanel.hidden = false
   }
 
   if (completedGamesBtn) {
-    completedGamesBtn.classList.add("active");
+    completedGamesBtn.classList.add('active')
   }
 
-  loadCompletedGames();
+  loadCompletedGames()
+
+  scrollToMobileContent(completedGamesPanel)
 }
 
-function bindViewSwitching() {
-  const gameQueueBtn = document.getElementById("gameQueueBtn");
+function bindViewSwitching () {
+  const gameQueueBtn = document.getElementById('gameQueueBtn')
 
-  const gameLibraryBtn = document.getElementById("gameLibraryBtn");
+  const gameLibraryBtn = document.getElementById('gameLibraryBtn')
 
-  const completedGamesBtn = document.getElementById("completedGamesBtn");
+  const completedGamesBtn = document.getElementById('completedGamesBtn')
 
-  const filterButtons = document.querySelectorAll(".nav-btn[data-filter]");
+  const filterButtons = document.querySelectorAll('.nav-btn[data-filter]')
 
   if (gameQueueBtn) {
-    gameQueueBtn.addEventListener("click", showGameQueue);
+    gameQueueBtn.addEventListener('click', showGameQueue)
   }
 
   if (gameLibraryBtn) {
-    gameLibraryBtn.addEventListener("click", showGameLibrary);
+    gameLibraryBtn.addEventListener('click', showGameLibrary)
   }
 
   if (completedGamesBtn) {
-    completedGamesBtn.addEventListener("click", showCompletedGames);
+    completedGamesBtn.addEventListener('click', showCompletedGames)
   }
 
-  filterButtons.forEach((button) => {
-    button.addEventListener("click", () => {
-      showCommandDatabase();
+  filterButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      showCommandDatabase()
 
-      button.classList.add("active");
-    });
-  });
+      button.classList.add('active')
+
+      const searchPanel = document.getElementById('searchPanel')
+
+      scrollToMobileContent(searchPanel)
+    })
+  })
 }
 
-async function startOxnet() {
-  bindCommandUI();
-  bindViewSwitching();
+async function startOxnet () {
+  bindCommandUI()
+  bindViewSwitching()
 
-  await loadCommands();
-  await loadRedemptions();
-  await loadAccount();
+  await loadCommands()
+  await loadRedemptions()
+  await loadAccount()
 }
 
-startOxnet();
+startOxnet()
