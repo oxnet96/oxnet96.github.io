@@ -1,7 +1,7 @@
 import { isBridgeAuthorized, jsonResponse } from '../lib/http.js'
 
-export async function handleGameRoutes (context) {
-  const { request, env, url, sql, headers } = context
+export async function handleGameRoutes(context) {
+  const { request, env, url, sql, headers } = context;
 
   /*
   ==================================================
@@ -9,7 +9,7 @@ export async function handleGameRoutes (context) {
   ==================================================
 */
 
-  if (url.pathname === '/game-queue') {
+  if (url.pathname === "/game-queue") {
     try {
       const rows = await sql`
         select
@@ -34,7 +34,7 @@ export async function handleGameRoutes (context) {
           end,
           priority desc,
           requested_at asc
-      `
+      `;
 
       return jsonResponse(
         {
@@ -61,22 +61,96 @@ export async function handleGameRoutes (context) {
 
             status: row.status,
 
-            requested_at: row.requested_at
-          }))
+            requested_at: row.requested_at,
+          })),
         },
         200,
-        headers
-      )
+        headers,
+      );
     } catch (error) {
-      console.error('Game queue failed:', error)
+      console.error("Game queue failed:", error);
 
       return jsonResponse(
         {
-          error: 'Game queue unavailable'
+          error: "Game queue unavailable",
         },
         500,
-        headers
-      )
+        headers,
+      );
+    }
+  }
+
+  /*
+  ==================================================
+  PUBLIC GAME LIBRARY
+
+  GET /game-library
+  ==================================================
+*/
+
+  if (url.pathname === "/game-library") {
+    if (request.method !== "GET") {
+      return jsonResponse(
+        {
+          error: "Method not allowed",
+        },
+        405,
+        headers,
+      );
+    }
+
+    try {
+      const rows = await sql`
+        select
+          library_code,
+          game_name,
+          platform,
+          request_type,
+          schmeckle_cost,
+          completed_at
+        from game_library
+        where
+          owned = true
+          and enabled = true
+          and request_type <> 'disabled'
+        order by
+          upper(platform),
+          lower(game_name)
+      `;
+
+      return jsonResponse(
+        {
+          success: true,
+
+          games: rows.map((row) => ({
+            library_code: row.library_code,
+
+            game_name: row.game_name,
+
+            platform: row.platform,
+
+            request_type: row.request_type,
+
+            schmeckle_cost: Number(row.schmeckle_cost),
+
+            completed: Boolean(row.completed_at),
+
+            completed_at: row.completed_at,
+          })),
+        },
+        200,
+        headers,
+      );
+    } catch (error) {
+      console.error("Public game library failed:", error);
+
+      return jsonResponse(
+        {
+          error: "Game library unavailable",
+        },
+        500,
+        headers,
+      );
     }
   }
 
@@ -86,51 +160,45 @@ export async function handleGameRoutes (context) {
   ==================================================
 */
 
-if (url.pathname === '/bridge/game-lookup') {
-  if (request.method !== 'POST') {
-    return jsonResponse(
-      {
-        error: 'Method not allowed'
-      },
-      405,
-      headers
-    )
-  }
-
-  if (!isBridgeAuthorized(request, env)) {
-    return jsonResponse(
-      {
-        error: 'Unauthorized'
-      },
-      401,
-      headers
-    )
-  }
-
-  try {
-    const body =
-      await request.json()
-
-    const libraryCode =
-      String(
-        body.library_code || ''
-      )
-        .trim()
-        .toUpperCase()
-
-    if (!libraryCode) {
+  if (url.pathname === "/bridge/game-lookup") {
+    if (request.method !== "POST") {
       return jsonResponse(
         {
-          error:
-            'Library code is required'
+          error: "Method not allowed",
         },
-        400,
-        headers
-      )
+        405,
+        headers,
+      );
     }
 
-    const rows =
-      await sql`
+    if (!isBridgeAuthorized(request, env)) {
+      return jsonResponse(
+        {
+          error: "Unauthorized",
+        },
+        401,
+        headers,
+      );
+    }
+
+    try {
+      const body = await request.json();
+
+      const libraryCode = String(body.library_code || "")
+        .trim()
+        .toUpperCase();
+
+      if (!libraryCode) {
+        return jsonResponse(
+          {
+            error: "Library code is required",
+          },
+          400,
+          headers,
+        );
+      }
+
+      const rows = await sql`
         select
           id,
           library_code,
@@ -146,141 +214,105 @@ if (url.pathname === '/bridge/game-lookup') {
           upper(library_code) =
             ${libraryCode}
         limit 1
-      `
+      `;
 
-    if (!rows.length) {
+      if (!rows.length) {
+        return jsonResponse(
+          {
+            error: "Library code not found",
+          },
+          404,
+          headers,
+        );
+      }
+
+      const game = rows[0];
+
+      if (!game.owned) {
+        return jsonResponse(
+          {
+            error: "Game is not currently owned",
+            library_code: game.library_code,
+            game_name: game.game_name,
+            platform: game.platform,
+          },
+          409,
+          headers,
+        );
+      }
+
+      if (!game.enabled) {
+        return jsonResponse(
+          {
+            error: "Game is currently disabled",
+            library_code: game.library_code,
+            game_name: game.game_name,
+            platform: game.platform,
+          },
+          409,
+          headers,
+        );
+      }
+
+      if (game.completed_at) {
+        return jsonResponse(
+          {
+            error: "Game has already been completed",
+            library_code: game.library_code,
+            game_name: game.game_name,
+            platform: game.platform,
+            completed_at: game.completed_at,
+          },
+          409,
+          headers,
+        );
+      }
+
+      if (game.request_type !== "schmeckles") {
+        return jsonResponse(
+          {
+            error: "Game is not available for normal Schmeckle requests",
+            library_code: game.library_code,
+            game_name: game.game_name,
+            platform: game.platform,
+            request_type: game.request_type,
+          },
+          409,
+          headers,
+        );
+      }
+
       return jsonResponse(
         {
-          error:
-            'Library code not found'
+          success: true,
+
+          library_id: Number(game.id),
+
+          library_code: game.library_code,
+
+          game_name: game.game_name,
+
+          platform: game.platform,
+
+          request_type: game.request_type,
+
+          schmeckle_cost: Number(game.schmeckle_cost),
         },
-        404,
-        headers
-      )
-    }
+        200,
+        headers,
+      );
+    } catch (error) {
+      console.error("Game library lookup failed:", error);
 
-    const game =
-      rows[0]
-
-    if (!game.owned) {
       return jsonResponse(
         {
-          error:
-            'Game is not currently owned',
-          library_code:
-            game.library_code,
-          game_name:
-            game.game_name,
-          platform:
-            game.platform
+          error: "Game library lookup failed",
         },
-        409,
-        headers
-      )
+        500,
+        headers,
+      );
     }
-
-    if (!game.enabled) {
-      return jsonResponse(
-        {
-          error:
-            'Game is currently disabled',
-          library_code:
-            game.library_code,
-          game_name:
-            game.game_name,
-          platform:
-            game.platform
-        },
-        409,
-        headers
-      )
-    }
-
-    if (game.completed_at) {
-      return jsonResponse(
-        {
-          error:
-            'Game has already been completed',
-          library_code:
-            game.library_code,
-          game_name:
-            game.game_name,
-          platform:
-            game.platform,
-          completed_at:
-            game.completed_at
-        },
-        409,
-        headers
-      )
-    }
-
-    if (
-      game.request_type !==
-      'schmeckles'
-    ) {
-      return jsonResponse(
-        {
-          error:
-            'Game is not available for normal Schmeckle requests',
-          library_code:
-            game.library_code,
-          game_name:
-            game.game_name,
-          platform:
-            game.platform,
-          request_type:
-            game.request_type
-        },
-        409,
-        headers
-      )
-    }
-
-    return jsonResponse(
-      {
-        success: true,
-
-        library_id:
-          Number(game.id),
-
-        library_code:
-          game.library_code,
-
-        game_name:
-          game.game_name,
-
-        platform:
-          game.platform,
-
-        request_type:
-          game.request_type,
-
-        schmeckle_cost:
-          Number(
-            game.schmeckle_cost
-          )
-      },
-      200,
-      headers
-    )
-
-  } catch (error) {
-    console.error(
-      'Game library lookup failed:',
-      error
-    )
-
-    return jsonResponse(
-      {
-        error:
-          'Game library lookup failed'
-      },
-      500,
-      headers
-    )
   }
-}
 
   /*
   ==================================================
@@ -288,29 +320,29 @@ if (url.pathname === '/bridge/game-lookup') {
   ==================================================
 */
 
-  if (url.pathname === '/bridge/game-jump') {
-    if (request.method !== 'POST') {
+  if (url.pathname === "/bridge/game-jump") {
+    if (request.method !== "POST") {
       return jsonResponse(
         {
-          error: 'Method not allowed'
+          error: "Method not allowed",
         },
         405,
-        headers
-      )
+        headers,
+      );
     }
 
     if (!isBridgeAuthorized(request, env)) {
       return jsonResponse(
         {
-          error: 'Unauthorized'
+          error: "Unauthorized",
         },
         401,
-        headers
-      )
+        headers,
+      );
     }
 
     try {
-      const body = await request.json()
+      const body = await request.json();
 
       /*
       request_id from Streamer.bot
@@ -318,7 +350,7 @@ if (url.pathname === '/bridge/game-lookup') {
       request code.
     */
 
-      const requestCode = Number(body.request_id)
+      const requestCode = Number(body.request_id);
 
       if (
         !Number.isInteger(requestCode) ||
@@ -327,11 +359,11 @@ if (url.pathname === '/bridge/game-lookup') {
       ) {
         return jsonResponse(
           {
-            error: 'Invalid request ID'
+            error: "Invalid request ID",
           },
           400,
-          headers
-        )
+          headers,
+        );
       }
 
       /*
@@ -352,22 +384,22 @@ if (url.pathname === '/bridge/game-lookup') {
           request_code =
             ${requestCode}
         limit 1
-      `
+      `;
 
       if (!target.length) {
         return jsonResponse(
           {
-            error: 'Game request not found'
+            error: "Game request not found",
           },
           404,
-          headers
-        )
+          headers,
+        );
       }
 
-      if (target[0].status !== 'queued') {
+      if (target[0].status !== "queued") {
         return jsonResponse(
           {
-            error: 'Game request is not queued',
+            error: "Game request is not queued",
 
             request_id: Number(target[0].request_code),
 
@@ -375,11 +407,11 @@ if (url.pathname === '/bridge/game-lookup') {
 
             platform: target[0].platform,
 
-            status: target[0].status
+            status: target[0].status,
           },
           409,
-          headers
-        )
+          headers,
+        );
       }
 
       /*
@@ -396,7 +428,7 @@ if (url.pathname === '/bridge/game-lookup') {
           priority desc,
           requested_at asc
         limit 1
-      `
+      `;
 
       if (
         firstQueued.length > 0 &&
@@ -404,7 +436,7 @@ if (url.pathname === '/bridge/game-lookup') {
       ) {
         return jsonResponse(
           {
-            error: 'Game request is already first in queue',
+            error: "Game request is already first in queue",
 
             request_id: Number(target[0].request_code),
 
@@ -412,11 +444,11 @@ if (url.pathname === '/bridge/game-lookup') {
 
             platform: target[0].platform,
 
-            status: target[0].status
+            status: target[0].status,
           },
           409,
-          headers
-        )
+          headers,
+        );
       }
 
       const priorityRows = await sql`
@@ -427,9 +459,9 @@ if (url.pathname === '/bridge/game-lookup') {
           ) as max_priority
         from game_requests
         where status = 'queued'
-      `
+      `;
 
-      const nextPriority = Number(priorityRows[0].max_priority) + 1
+      const nextPriority = Number(priorityRows[0].max_priority) + 1;
 
       /*
       Update using the internal ID
@@ -449,7 +481,7 @@ if (url.pathname === '/bridge/game-lookup') {
           game_name,
           platform,
           priority
-      `
+      `;
 
       return jsonResponse(
         {
@@ -463,21 +495,21 @@ if (url.pathname === '/bridge/game-lookup') {
 
           platform: updated[0].platform,
 
-          priority: Number(updated[0].priority)
+          priority: Number(updated[0].priority),
         },
         200,
-        headers
-      )
+        headers,
+      );
     } catch (error) {
-      console.error('Game jump failed:', error)
+      console.error("Game jump failed:", error);
 
       return jsonResponse(
         {
-          error: 'Game jump failed'
+          error: "Game jump failed",
         },
         500,
-        headers
-      )
+        headers,
+      );
     }
   }
 
@@ -487,28 +519,28 @@ if (url.pathname === '/bridge/game-lookup') {
   ==================================================
 */
 
-  if (url.pathname !== '/bridge/game-request') {
-    return null
+  if (url.pathname !== "/bridge/game-request") {
+    return null;
   }
 
-  if (request.method !== 'POST') {
+  if (request.method !== "POST") {
     return jsonResponse(
       {
-        error: 'Method not allowed'
+        error: "Method not allowed",
       },
       405,
-      headers
-    )
+      headers,
+    );
   }
 
   if (!isBridgeAuthorized(request, env)) {
     return jsonResponse(
       {
-        error: 'Unauthorized'
+        error: "Unauthorized",
       },
       401,
-      headers
-    )
+      headers,
+    );
   }
 
   try {
@@ -826,24 +858,24 @@ if (url.pathname === '/bridge/game-lookup') {
     simultaneous requests.
   */
 
-    if (error && error.code === '23505') {
+    if (error && error.code === "23505") {
       return jsonResponse(
         {
-          error: 'Game request conflicts with an active request'
+          error: "Game request conflicts with an active request",
         },
         409,
-        headers
-      )
+        headers,
+      );
     }
 
-    console.error('Game request failed:', error)
+    console.error("Game request failed:", error);
 
     return jsonResponse(
       {
-        error: 'Game request failed'
+        error: "Game request failed",
       },
       500,
-      headers
-    )
+      headers,
+    );
   }
 }
