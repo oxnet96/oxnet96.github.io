@@ -191,6 +191,29 @@ export function renderCommands () {
               : ''
           }
 
+          ${
+            cmd.action && cmd.action_label
+              ? `
+                <div
+                  style="
+                    margin-top: 9px;
+                    display: flex;
+                    justify-content: flex-start;
+                  "
+                >
+                  <button
+                    class="find-btn"
+                    type="button"
+                    data-command-action="${escapeHtml(cmd.action)}"
+                    data-redemption-key="${escapeHtml(cmd.redemption_key || '')}"
+                  >
+                    ${escapeHtml(cmd.action_label)}
+                  </button>
+                </div>
+              `
+              : ''
+          }
+
         </div>
       `
     })
