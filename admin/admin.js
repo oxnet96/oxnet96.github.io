@@ -396,6 +396,21 @@ function renderAdminLibrary(games) {
       TITLES
     </div>
 
+    <div
+  style="
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 12px;
+  "
+>
+  <button
+    class="find-btn"
+    id="adminAddGameBtn"
+  >
+    + ADD GAME
+  </button>
+</div>
+
 
     <div
       style="
@@ -479,6 +494,292 @@ function renderAdminLibrary(games) {
 
         renderAdminPlatformLibrary(games, platform);
       });
+    });
+  const addGameBtn = document.getElementById("adminAddGameBtn");
+
+  if (addGameBtn) {
+    addGameBtn.addEventListener("click", () => {
+      renderAdminAddGameForm(games);
+    });
+  }
+}
+
+function renderAdminAddGameForm(games) {
+  const container = document.getElementById("adminGameLibrary");
+
+  if (!container) {
+    return;
+  }
+
+  const platforms = Array.from(
+    new Set(
+      games.map((game) =>
+        String(game.platform || "")
+          .trim()
+          .toUpperCase(),
+      ),
+    ),
+  )
+    .filter(Boolean)
+    .sort();
+
+  container.innerHTML = `
+
+    <div
+      style="
+        display: flex;
+        gap: 8px;
+        margin-bottom: 12px;
+      "
+    >
+      <button
+        class="find-btn"
+        id="adminAddGameCancel"
+      >
+        &lt; CANCEL
+      </button>
+
+      <div
+        class="status-box"
+        style="
+          margin: 0;
+          flex: 1;
+          min-height: 0;
+        "
+      >
+        ADD GAME TO OXNET LIBRARY
+      </div>
+    </div>
+
+
+    <div
+      class="command-card"
+      style="
+        display: grid;
+        gap: 10px;
+      "
+    >
+
+      <label>
+        GAME TITLE
+        <br>
+
+        <input
+          id="adminAddGameName"
+          class="search"
+          type="text"
+          maxlength="120"
+          placeholder="Battletoads"
+        >
+      </label>
+
+
+      <label>
+        PLATFORM
+        <br>
+
+        <input
+          id="adminAddGamePlatform"
+          class="search"
+          type="text"
+          list="adminPlatformList"
+          maxlength="20"
+          placeholder="NES"
+        >
+
+        <datalist id="adminPlatformList">
+          ${platforms
+            .map(
+              (platform) => `
+                  <option
+                    value="${escapeHtml(platform)}"
+                  ></option>
+                `,
+            )
+            .join("")}
+        </datalist>
+      </label>
+
+
+      <label>
+        REQUEST TYPE
+        <br>
+
+        <select
+          id="adminAddGameType"
+          class="search"
+        >
+          <option value="schmeckles">
+            SCHMECKLES
+          </option>
+
+          <option value="donation">
+            DONATION ONLY
+          </option>
+
+          <option value="community">
+            COMMUNITY CHALLENGE
+          </option>
+
+          <option value="disabled">
+            DISABLED
+          </option>
+        </select>
+      </label>
+
+
+      <label>
+        SCHMECKLE COST
+        <br>
+
+        <input
+          id="adminAddGameCost"
+          class="search"
+          type="number"
+          min="0"
+          step="1"
+          value="25000"
+        >
+      </label>
+
+
+      <label>
+        <input
+          id="adminAddGameOwned"
+          type="checkbox"
+          checked
+        >
+
+        OWNED
+      </label>
+
+
+      <label>
+        <input
+          id="adminAddGameEnabled"
+          type="checkbox"
+          checked
+        >
+
+        ENABLED
+      </label>
+
+
+      <label>
+        NOTES
+        <br>
+
+        <textarea
+          id="adminAddGameNotes"
+          class="search"
+          rows="4"
+          maxlength="1000"
+          placeholder="Optional admin notes..."
+        ></textarea>
+      </label>
+
+
+      <button
+        class="find-btn"
+        id="adminAddGameSave"
+        style="
+          min-height: 44px;
+        "
+      >
+        SAVE GAME
+      </button>
+
+
+      <div
+        id="adminAddGameStatus"
+      ></div>
+
+    </div>
+  `;
+
+  document
+    .getElementById("adminAddGameCancel")
+    .addEventListener("click", () => {
+      renderAdminLibrary(games);
+    });
+
+  document
+    .getElementById("adminAddGameSave")
+    .addEventListener("click", async () => {
+      const status = document.getElementById("adminAddGameStatus");
+
+      const gameName = document.getElementById("adminAddGameName").value.trim();
+
+      const platform = document
+        .getElementById("adminAddGamePlatform")
+        .value.trim()
+        .toUpperCase();
+
+      const requestType = document.getElementById("adminAddGameType").value;
+
+      const schmeckleCost = Number(
+        document.getElementById("adminAddGameCost").value,
+      );
+
+      const owned = document.getElementById("adminAddGameOwned").checked;
+
+      const enabled = document.getElementById("adminAddGameEnabled").checked;
+
+      const notes = document.getElementById("adminAddGameNotes").value.trim();
+
+      if (!gameName || !platform) {
+        status.innerHTML = `
+            <div class="empty">
+              *** TITLE AND PLATFORM REQUIRED.
+            </div>
+          `;
+
+        return;
+      }
+
+      status.textContent = "SAVING TO OXNET DATABASE...";
+
+      try {
+        const response = await adminFetch("/admin/library/add", {
+          method: "POST",
+
+          body: JSON.stringify({
+            game_name: gameName,
+
+            platform,
+
+            owned,
+
+            enabled,
+
+            request_type: requestType,
+
+            schmeckle_cost: schmeckleCost,
+
+            notes,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || `HTTP ${response.status}`);
+        }
+
+        window.alert(
+          `${data.game.game_name} (${data.game.platform}) added as ${data.game.library_code}.`,
+        );
+
+        await loadAdminLibrary();
+      } catch (error) {
+        console.error("Admin add game failed.", error);
+
+        status.innerHTML = `
+            <div class="empty">
+              *** ${escapeHtml(error.message)}
+            </div>
+          `;
+      }
     });
 }
 
