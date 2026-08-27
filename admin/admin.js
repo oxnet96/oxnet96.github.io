@@ -352,73 +352,367 @@ function renderAdminLibrary(games) {
     return;
   }
 
-  container.innerHTML = games
-    .map((game) => {
-      const completed = Boolean(game.completed_at);
+  /*
+    ================================================
+    BUILD PLATFORM COUNTS
+    ================================================
+  */
 
-      let status = "AVAILABLE";
+  const platformMap = new Map();
 
-      if (completed) {
-        status = "COMPLETED";
-      } else if (!game.owned) {
-        status = "NOT OWNED";
-      } else if (!game.enabled) {
-        status = "DISABLED";
-      } else if (game.request_type !== "schmeckles") {
-        status = game.request_type.toUpperCase();
+  games.forEach((game) => {
+    const platform = String(game.platform || "UNKNOWN").toUpperCase();
+
+    if (!platformMap.has(platform)) {
+      platformMap.set(platform, 0);
+    }
+
+    platformMap.set(platform, platformMap.get(platform) + 1);
+  });
+
+  const platforms = Array.from(platformMap.entries()).sort((a, b) =>
+    a[0].localeCompare(b[0]),
+  );
+
+  /*
+    ================================================
+    PLATFORM SELECTOR
+    ================================================
+  */
+
+  container.innerHTML = `
+
+    <div
+      class="status-box"
+      style="
+        margin-top: 0;
+        margin-bottom: 12px;
+      "
+    >
+      SELECT PLATFORM
+      <br>
+      TOTAL LIBRARY:
+      ${games.length.toLocaleString()}
+      TITLES
+    </div>
+
+
+    <div
+      style="
+        display: grid;
+        grid-template-columns:
+          repeat(
+            auto-fit,
+            minmax(150px, 1fr)
+          );
+        gap: 8px;
+      "
+    >
+
+      <button
+        class="find-btn"
+        data-library-platform="ALL"
+        style="
+          min-height: 70px;
+          font-family:
+            'Courier New',
+            monospace;
+        "
+      >
+        ALL GAMES
+        <br>
+        [${games.length}]
+      </button>
+
+
+      ${platforms
+        .map(
+          ([platform, count], index) => `
+              <button
+                class="find-btn"
+                data-library-platform-index="${index}"
+                style="
+                  min-height: 70px;
+                  font-family:
+                    'Courier New',
+                    monospace;
+                "
+              >
+                ${escapeHtml(platform)}
+                <br>
+                [${count}]
+              </button>
+            `,
+        )
+        .join("")}
+
+    </div>
+  `;
+
+  /*
+    ALL GAMES
+  */
+
+  const allButton = container.querySelector('[data-library-platform="ALL"]');
+
+  if (allButton) {
+    allButton.addEventListener("click", () => {
+      renderAdminPlatformLibrary(games, null);
+    });
+  }
+
+  /*
+    INDIVIDUAL PLATFORM BUTTONS
+  */
+
+  container
+    .querySelectorAll("[data-library-platform-index]")
+    .forEach((button) => {
+      button.addEventListener("click", () => {
+        const index = Number(button.dataset.libraryPlatformIndex);
+
+        const platform = platforms[index]?.[0];
+
+        if (!platform) {
+          return;
+        }
+
+        renderAdminPlatformLibrary(games, platform);
+      });
+    });
+}
+
+function renderAdminPlatformLibrary(games, platform) {
+  const container = document.getElementById("adminGameLibrary");
+
+  if (!container) {
+    return;
+  }
+
+  /*
+    Platform = null means ALL GAMES.
+  */
+
+  const platformGames = platform
+    ? games.filter((game) => String(game.platform).toUpperCase() === platform)
+    : [...games];
+
+  const heading = platform || "ALL GAMES";
+
+  container.innerHTML = `
+
+    <div
+      style="
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 10px;
+      "
+    >
+
+      <button
+        class="find-btn"
+        id="libraryBackBtn"
+      >
+        &lt; CONSOLES
+      </button>
+
+      <div
+        class="status-box"
+        style="
+          margin: 0;
+          flex: 1;
+        "
+      >
+        ${escapeHtml(heading)}
+        LIBRARY //
+        ${platformGames.length}
+        TITLES
+      </div>
+
+    </div>
+
+
+    <div
+      style="
+        display: flex;
+        gap: 6px;
+        margin-bottom: 12px;
+      "
+    >
+
+      <input
+        id="adminLibrarySearch"
+        type="text"
+        placeholder="SEARCH GAME OR G####..."
+        style="
+          flex: 1;
+          min-width: 180px;
+          font-family:
+            'Courier New',
+            monospace;
+        "
+      >
+
+      <button
+        class="find-btn"
+        id="adminLibraryClearSearch"
+      >
+        CLEAR
+      </button>
+
+    </div>
+
+
+    <div
+      id="adminLibraryGameList"
+    ></div>
+  `;
+
+  const list = document.getElementById("adminLibraryGameList");
+
+  const search = document.getElementById("adminLibrarySearch");
+
+  /*
+    ================================================
+    RENDER GAME RESULTS
+    ================================================
+  */
+
+  function renderResults(query = "") {
+    const searchText = String(query).trim().toLowerCase();
+
+    const filtered = platformGames.filter((game) => {
+      if (!searchText) {
+        return true;
       }
 
-      return `
-        <div class="command-card">
+      return (
+        String(game.game_name || "")
+          .toLowerCase()
+          .includes(searchText) ||
+        String(game.library_code || "")
+          .toLowerCase()
+          .includes(searchText)
+      );
+    });
 
-          <div class="command-title">
-
-            <div class="command-name">
-              ${escapeHtml(game.game_name)}
-              //
-              ${escapeHtml(game.platform)}
-            </div>
-
-            <span class="badge">
-              ${escapeHtml(game.library_code)}
-            </span>
-
-            <span class="badge status">
-              ${escapeHtml(status)}
-            </span>
-
-          </div>
-
-          <div class="command-desc">
-            PLATFORM:
-            ${escapeHtml(game.platform)}
-            <br>
-
-            REQUEST TYPE:
-            ${escapeHtml(game.request_type)}
-            <br>
-
-            COST:
-            ${Number(game.schmeckle_cost || 0).toLocaleString()}
-            SCHMECKLES
-            <br>
-
-            OWNED:
-            ${game.owned ? "YES" : "NO"}
-            //
-            ENABLED:
-            ${game.enabled ? "YES" : "NO"}
-          </div>
-
-          <div class="command-example">
-            &gt; !addgame
-            ${escapeHtml(game.library_code)}
-          </div>
-
+    if (!filtered.length) {
+      list.innerHTML = `
+        <div class="empty">
+          *** NO MATCHING SOFTWARE FOUND.
         </div>
       `;
-    })
-    .join("");
+
+      return;
+    }
+
+    list.innerHTML = filtered
+      .map((game) => {
+        const completed = Boolean(game.completed_at);
+
+        let status = "AVAILABLE";
+
+        if (completed) {
+          status = "COMPLETED";
+        } else if (!game.owned) {
+          status = "NOT OWNED";
+        } else if (!game.enabled) {
+          status = "DISABLED";
+        } else if (game.request_type !== "schmeckles") {
+          status = String(game.request_type).toUpperCase();
+        }
+
+        return `
+            <div class="command-card">
+
+              <div class="command-title">
+
+                <div class="command-name">
+                  ${escapeHtml(game.game_name)}
+                </div>
+
+
+                <span class="badge">
+                  ${escapeHtml(game.library_code)}
+                </span>
+
+
+                <span class="badge status">
+                  ${escapeHtml(status)}
+                </span>
+
+              </div>
+
+
+              <div class="command-desc">
+
+                PLATFORM:
+                ${escapeHtml(game.platform)}
+
+                <br>
+
+                REQUEST TYPE:
+                ${escapeHtml(game.request_type)}
+
+                <br>
+
+                COST:
+                ${Number(game.schmeckle_cost || 0).toLocaleString()}
+                SCHMECKLES
+
+              </div>
+
+
+              <div class="command-example">
+                &gt;
+                !addgame
+                ${escapeHtml(game.library_code)}
+              </div>
+
+            </div>
+          `;
+      })
+      .join("");
+  }
+
+  renderResults();
+
+  /*
+    ================================================
+    SEARCH
+    ================================================
+  */
+
+  search.addEventListener("input", () => {
+    renderResults(search.value);
+  });
+
+  /*
+    ================================================
+    CLEAR SEARCH
+    ================================================
+  */
+
+  document
+    .getElementById("adminLibraryClearSearch")
+    .addEventListener("click", () => {
+      search.value = "";
+
+      renderResults();
+
+      search.focus();
+    });
+
+  /*
+    ================================================
+    BACK TO PLATFORM SELECTOR
+    ================================================
+  */
+
+  document.getElementById("libraryBackBtn").addEventListener("click", () => {
+    renderAdminLibrary(games);
+  });
 }
 
 async function loadAdminLibrary() {
