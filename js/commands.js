@@ -76,6 +76,11 @@ export function renderCommands () {
         matchesFilter = true
       } else if (currentFilter === 'planned') {
         matchesFilter = normalize(cmd.status) === 'planned'
+      } else if (currentFilter === 'redemption') {
+        matchesFilter =
+          normalize(cmd.category) === 'redemption' ||
+          normalize(cmd.source) === 'neon-redemption' ||
+          Boolean(cmd.redemption_key)
       } else {
         matchesFilter = normalize(cmd.category) === currentFilter
       }
@@ -205,7 +210,9 @@ export function renderCommands () {
                     class="find-btn"
                     type="button"
                     data-command-action="${escapeHtml(cmd.action)}"
-                    data-redemption-key="${escapeHtml(cmd.redemption_key || '')}"
+                    data-redemption-key="${escapeHtml(
+                      cmd.redemption_key || ''
+                    )}"
                   >
                     ${escapeHtml(cmd.action_label)}
                   </button>
@@ -292,9 +299,7 @@ async function loadStaticCommandFallback () {
   })
 
   if (!response.ok) {
-    throw new Error(
-      `Static command fallback returned ${response.status}`
-    )
+    throw new Error(`Static command fallback returned ${response.status}`)
   }
 
   const data = await response.json()
@@ -315,9 +320,7 @@ export async function loadCommands () {
     })
 
     if (!response.ok) {
-      throw new Error(
-        `Command API returned ${response.status}`
-      )
+      throw new Error(`Command API returned ${response.status}`)
     }
 
     const data = await response.json()
@@ -356,13 +359,10 @@ export async function loadCommands () {
       `
     }
   } catch (fallbackError) {
-    console.error(
-      'OXNET command database and static fallback both failed.',
-      {
-        backendError,
-        fallbackError
-      }
-    )
+    console.error('OXNET command database and static fallback both failed.', {
+      backendError,
+      fallbackError
+    })
 
     allCommands = []
 
