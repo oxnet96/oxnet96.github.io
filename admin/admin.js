@@ -1,135 +1,140 @@
-import { API_URL, SESSION_KEY } from "../js/config.js";
+import { API_URL, SESSION_KEY } from '../js/config.js'
+import { loadAdminCommands } from './admin-commands-ui.js'
 
-function getSession() {
-  return localStorage.getItem(SESSION_KEY);
+function getSession () {
+  return localStorage.getItem(SESSION_KEY)
 }
 
-function escapeHtml(value) {
-  return String(value ?? "")
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+function escapeHtml (value) {
+  return String(value ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;')
 }
 
-async function adminFetch(path, options = {}) {
-  const session = getSession();
+async function adminFetch (path, options = {}) {
+  const session = getSession()
 
   const headers = {
     ...(options.headers || {}),
-    Authorization: `Bearer ${session}`,
-  };
+    Authorization: `Bearer ${session}`
+  }
 
-  if (options.body && !headers["Content-Type"]) {
-    headers["Content-Type"] = "application/json";
+  if (options.body && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json'
   }
 
   return fetch(`${API_URL}${path}`, {
     ...options,
     headers,
-    cache: "no-store",
-  });
+    cache: 'no-store'
+  })
 }
 
-function showDenied(message = "ADMIN ACCESS REQUIRED") {
-  document.getElementById("adminAuthPanel").hidden = true;
+function showDenied (message = 'ADMIN ACCESS REQUIRED') {
+  document.getElementById('adminAuthPanel').hidden = true
 
-  document.getElementById("adminControlPanel").hidden = true;
+  document.getElementById('adminControlPanel').hidden = true
 
-  document.getElementById("adminDeniedPanel").hidden = false;
+  document.getElementById('adminDeniedPanel').hidden = false
 
-  const deniedPanel = document.getElementById("adminDeniedPanel");
+  const deniedPanel = document.getElementById('adminDeniedPanel')
 
-  const header = deniedPanel.querySelector(".panel-header");
+  const header = deniedPanel.querySelector('.panel-header')
 
   if (header) {
-    header.textContent = message;
+    header.textContent = message
   }
 }
 
-function showAdmin(data) {
-  document.getElementById("adminAuthPanel").hidden = true;
+function showAdmin (data) {
+  document.getElementById('adminAuthPanel').hidden = true
 
-  document.getElementById("adminDeniedPanel").hidden = true;
+  document.getElementById('adminDeniedPanel').hidden = true
 
-  document.getElementById("adminControlPanel").hidden = false;
+  document.getElementById('adminControlPanel').hidden = false
 
-  document.getElementById("adminUser").textContent =
-    data.user || data.login || "OXNET ADMIN";
+  document.getElementById('adminUser').textContent =
+    data.user || data.login || 'OXNET ADMIN'
 
-  document.getElementById("adminApiStatus").textContent = "ONLINE";
+  document.getElementById('adminApiStatus').textContent = 'ONLINE'
 }
 
-function bindNavigation() {
-  const buttons = document.querySelectorAll("[data-admin-view]");
+function bindNavigation () {
+  const buttons = document.querySelectorAll('[data-admin-view]')
 
-  const views = document.querySelectorAll(".admin-view");
+  const views = document.querySelectorAll('.admin-view')
 
-  buttons.forEach((button) => {
-    button.addEventListener("click", async () => {
-      buttons.forEach((btn) => btn.classList.remove("active"));
+  buttons.forEach(button => {
+    button.addEventListener('click', async () => {
+      buttons.forEach(btn => btn.classList.remove('active'))
 
-      button.classList.add("active");
+      button.classList.add('active')
 
-      const target = button.dataset.adminView;
+      const target = button.dataset.adminView
 
-      views.forEach((view) => {
-        view.hidden = true;
-      });
+      views.forEach(view => {
+        view.hidden = true
+      })
 
       const targetView = document.getElementById(
-        `adminView${target.charAt(0).toUpperCase() + target.slice(1)}`,
-      );
+        `adminView${target.charAt(0).toUpperCase() + target.slice(1)}`
+      )
 
       if (targetView) {
-        targetView.hidden = false;
+        targetView.hidden = false
       }
 
-      if (target === "games") {
-        await loadAdminGames();
+      if (target === 'games') {
+        await loadAdminGames()
       }
 
-      if (target === "library") {
-        await loadAdminLibrary();
+      if (target === 'library') {
+        await loadAdminLibrary()
       }
-    });
-  });
+
+      if (target === 'commands') {
+        await loadAdminCommands()
+      }
+    })
+  })
 }
 
-function bindButtons() {
-  const loginBtn = document.getElementById("adminLoginBtn");
+function bindButtons () {
+  const loginBtn = document.getElementById('adminLoginBtn')
 
-  const logoutBtn = document.getElementById("adminLogoutBtn");
+  const logoutBtn = document.getElementById('adminLogoutBtn')
 
-  const portalBtn = document.getElementById("returnToPortalBtn");
+  const portalBtn = document.getElementById('returnToPortalBtn')
 
   if (loginBtn) {
-    loginBtn.addEventListener("click", () => {
-      window.location.href = `${API_URL}/auth/twitch`;
-    });
+    loginBtn.addEventListener('click', () => {
+      window.location.href = `${API_URL}/auth/twitch`
+    })
   }
 
   if (logoutBtn) {
-    logoutBtn.addEventListener("click", () => {
-      localStorage.removeItem(SESSION_KEY);
+    logoutBtn.addEventListener('click', () => {
+      localStorage.removeItem(SESSION_KEY)
 
-      window.location.reload();
-    });
+      window.location.reload()
+    })
   }
 
   if (portalBtn) {
-    portalBtn.addEventListener("click", () => {
-      window.location.href = "../";
-    });
+    portalBtn.addEventListener('click', () => {
+      window.location.href = '../'
+    })
   }
 }
 
-function renderAdminGames(games) {
-  const container = document.getElementById("adminGameQueue");
+function renderAdminGames (games) {
+  const container = document.getElementById('adminGameQueue')
 
   if (!container) {
-    return;
+    return
   }
 
   if (!games.length) {
@@ -140,14 +145,14 @@ function renderAdminGames(games) {
         FOR ONCE, NOBODY HAS MADE
         A TERRIBLE REQUEST.
       </div>
-    `;
+    `
 
-    return;
+    return
   }
 
   container.innerHTML = games
-    .map((game) => {
-      const playing = game.status === "playing";
+    .map(game => {
+      const playing = game.status === 'playing'
 
       return `
         <div class="command-card">
@@ -155,13 +160,13 @@ function renderAdminGames(games) {
           <div class="command-title">
 
             <div class="command-name">
-              ${playing ? "▶ NOW PLAYING" : `#${game.position}`}
+              ${playing ? '▶ NOW PLAYING' : `#${game.position}`}
               //
               ${escapeHtml(game.game_name)}
             </div>
 
-            <span class="badge ${playing ? "status" : "kind"}">
-              ${playing ? "PLAYING" : "QUEUED"}
+            <span class="badge ${playing ? 'status' : 'kind'}">
+              ${playing ? 'PLAYING' : 'QUEUED'}
             </span>
 
             <span class="badge">
@@ -198,7 +203,7 @@ function renderAdminGames(games) {
                     ▶ PLAY
                   </button>
                 `
-                : ""
+                : ''
             }
 
             <button
@@ -228,37 +233,37 @@ function renderAdminGames(games) {
           </div>
 
         </div>
-      `;
+      `
     })
-    .join("");
+    .join('')
 }
 
-async function loadAdminGames() {
-  const container = document.getElementById("adminGameQueue");
+async function loadAdminGames () {
+  const container = document.getElementById('adminGameQueue')
 
   if (!container) {
-    return;
+    return
   }
 
-  container.innerHTML = "LOADING OXNET PROGRAMMING DATABASE...";
+  container.innerHTML = 'LOADING OXNET PROGRAMMING DATABASE...'
 
   try {
-    const response = await adminFetch("/admin/games");
+    const response = await adminFetch('/admin/games')
 
-    const data = await response.json();
+    const data = await response.json()
 
     if (!response.ok) {
-      throw new Error(data.error || `HTTP ${response.status}`);
+      throw new Error(data.error || `HTTP ${response.status}`)
     }
 
-    const games = data.games || [];
+    const games = data.games || []
 
-    renderAdminGames(games);
+    renderAdminGames(games)
 
-    document.getElementById("adminGameCount").textContent =
-      games.length.toLocaleString();
+    document.getElementById('adminGameCount').textContent =
+      games.length.toLocaleString()
   } catch (error) {
-    console.error("Admin game queue failed.", error);
+    console.error('Admin game queue failed.', error)
 
     container.innerHTML = `
       <div class="empty">
@@ -266,77 +271,77 @@ async function loadAdminGames() {
         <br><br>
         ${escapeHtml(error.message)}
       </div>
-    `;
+    `
   }
 }
 
-async function updateGameStatus(requestId, status) {
-  const destructive = ["completed", "removed", "rejected"].includes(status);
+async function updateGameStatus (requestId, status) {
+  const destructive = ['completed', 'removed', 'rejected'].includes(status)
 
   if (destructive) {
     const confirmed = window.confirm(
-      `Set request ID ${requestId} to ${status.toUpperCase()}?`,
-    );
+      `Set request ID ${requestId} to ${status.toUpperCase()}?`
+    )
 
     if (!confirmed) {
-      return;
+      return
     }
   }
 
   try {
-    const response = await adminFetch("/admin/games/status", {
-      method: "POST",
+    const response = await adminFetch('/admin/games/status', {
+      method: 'POST',
 
       body: JSON.stringify({
         request_id: Number(requestId),
 
-        status,
-      }),
-    });
+        status
+      })
+    })
 
-    const data = await response.json();
+    const data = await response.json()
 
     if (!response.ok) {
-      window.alert(data.error || "OXNET rejected the update.");
+      window.alert(data.error || 'OXNET rejected the update.')
 
-      return;
+      return
     }
 
-    await loadAdminGames();
+    await loadAdminGames()
   } catch (error) {
-    console.error("Admin game update failed.", error);
+    console.error('Admin game update failed.', error)
 
-    window.alert("OXNET fell down the stairs. Try again.");
+    window.alert('OXNET fell down the stairs. Try again.')
   }
 }
 
-function bindGameActions() {
-  const container = document.getElementById("adminGameQueue");
+function bindGameActions () {
+  const container = document.getElementById('adminGameQueue')
 
   if (!container) {
-    return;
+    return
   }
 
-  container.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-game-action]");
+  container.addEventListener('click', event => {
+    const button = event.target.closest('[data-game-action]')
 
     if (!button) {
-      return;
+      return
     }
 
-    const requestId = button.dataset.requestId;
+    const requestId = button.dataset.requestId
 
-    const action = button.dataset.gameAction;
+    const action = button.dataset.gameAction
 
-    updateGameStatus(requestId, action);
-  });
+    updateGameStatus(requestId, action)
+  })
 }
 
-function renderAdminLibrary(games) {
-  const container = document.getElementById("adminGameLibrary");
+function renderAdminLibrary (games) {
+  const container = document.getElementById('adminGameLibrary')
 
   if (!container) {
-    return;
+    return
   }
 
   if (!games.length) {
@@ -347,9 +352,9 @@ function renderAdminLibrary(games) {
         OXNET PROGRAMMING HAS
         APPARENTLY SOLD THE COLLECTION.
       </div>
-    `;
+    `
 
-    return;
+    return
   }
 
   /*
@@ -358,21 +363,21 @@ function renderAdminLibrary(games) {
     ================================================
   */
 
-  const platformMap = new Map();
+  const platformMap = new Map()
 
-  games.forEach((game) => {
-    const platform = String(game.platform || "UNKNOWN").toUpperCase();
+  games.forEach(game => {
+    const platform = String(game.platform || 'UNKNOWN').toUpperCase()
 
     if (!platformMap.has(platform)) {
-      platformMap.set(platform, 0);
+      platformMap.set(platform, 0)
     }
 
-    platformMap.set(platform, platformMap.get(platform) + 1);
-  });
+    platformMap.set(platform, platformMap.get(platform) + 1)
+  })
 
   const platforms = Array.from(platformMap.entries()).sort((a, b) =>
-    a[0].localeCompare(b[0]),
-  );
+    a[0].localeCompare(b[0])
+  )
 
   /*
     ================================================
@@ -466,23 +471,23 @@ function renderAdminLibrary(games) {
                 <br>
                 [${count}]
               </button>
-            `,
+            `
         )
-        .join("")}
+        .join('')}
 
     </div>
-  `;
+  `
 
   /*
     ALL GAMES
   */
 
-  const allButton = container.querySelector('[data-library-platform="ALL"]');
+  const allButton = container.querySelector('[data-library-platform="ALL"]')
 
   if (allButton) {
-    allButton.addEventListener("click", () => {
-      renderAdminPlatformLibrary(games, null);
-    });
+    allButton.addEventListener('click', () => {
+      renderAdminPlatformLibrary(games, null)
+    })
   }
 
   /*
@@ -490,56 +495,56 @@ function renderAdminLibrary(games) {
   */
 
   container
-    .querySelectorAll("[data-library-platform-index]")
-    .forEach((button) => {
-      button.addEventListener("click", () => {
-        const index = Number(button.dataset.libraryPlatformIndex);
+    .querySelectorAll('[data-library-platform-index]')
+    .forEach(button => {
+      button.addEventListener('click', () => {
+        const index = Number(button.dataset.libraryPlatformIndex)
 
-        const platform = platforms[index]?.[0];
+        const platform = platforms[index]?.[0]
 
         if (!platform) {
-          return;
+          return
         }
 
-        renderAdminPlatformLibrary(games, platform);
-      });
-    });
-  
-  const bulkImportBtn = document.getElementById("adminBulkImportBtn");
+        renderAdminPlatformLibrary(games, platform)
+      })
+    })
+
+  const bulkImportBtn = document.getElementById('adminBulkImportBtn')
 
   if (bulkImportBtn) {
-    bulkImportBtn.addEventListener("click", () => {
-      renderAdminBulkImport(games);
-    });
+    bulkImportBtn.addEventListener('click', () => {
+      renderAdminBulkImport(games)
+    })
   }
 
-  const addGameBtn = document.getElementById("adminAddGameBtn");
+  const addGameBtn = document.getElementById('adminAddGameBtn')
 
   if (addGameBtn) {
-    addGameBtn.addEventListener("click", () => {
-      renderAdminAddGameForm(games);
-    });
+    addGameBtn.addEventListener('click', () => {
+      renderAdminAddGameForm(games)
+    })
   }
 }
 
-function renderAdminAddGameForm(games) {
-  const container = document.getElementById("adminGameLibrary");
+function renderAdminAddGameForm (games) {
+  const container = document.getElementById('adminGameLibrary')
 
   if (!container) {
-    return;
+    return
   }
 
   const platforms = Array.from(
     new Set(
-      games.map((game) =>
-        String(game.platform || "")
+      games.map(game =>
+        String(game.platform || '')
           .trim()
-          .toUpperCase(),
-      ),
-    ),
+          .toUpperCase()
+      )
+    )
   )
     .filter(Boolean)
-    .sort();
+    .sort()
 
   container.innerHTML = `
 
@@ -608,13 +613,13 @@ function renderAdminAddGameForm(games) {
         <datalist id="adminPlatformList">
           ${platforms
             .map(
-              (platform) => `
+              platform => `
                   <option
                     value="${escapeHtml(platform)}"
                   ></option>
-                `,
+                `
             )
-            .join("")}
+            .join('')}
         </datalist>
       </label>
 
@@ -713,53 +718,53 @@ function renderAdminAddGameForm(games) {
       ></div>
 
     </div>
-  `;
+  `
 
   document
-    .getElementById("adminAddGameCancel")
-    .addEventListener("click", () => {
-      renderAdminLibrary(games);
-    });
+    .getElementById('adminAddGameCancel')
+    .addEventListener('click', () => {
+      renderAdminLibrary(games)
+    })
 
   document
-    .getElementById("adminAddGameSave")
-    .addEventListener("click", async () => {
-      const status = document.getElementById("adminAddGameStatus");
+    .getElementById('adminAddGameSave')
+    .addEventListener('click', async () => {
+      const status = document.getElementById('adminAddGameStatus')
 
-      const gameName = document.getElementById("adminAddGameName").value.trim();
+      const gameName = document.getElementById('adminAddGameName').value.trim()
 
       const platform = document
-        .getElementById("adminAddGamePlatform")
+        .getElementById('adminAddGamePlatform')
         .value.trim()
-        .toUpperCase();
+        .toUpperCase()
 
-      const requestType = document.getElementById("adminAddGameType").value;
+      const requestType = document.getElementById('adminAddGameType').value
 
       const schmeckleCost = Number(
-        document.getElementById("adminAddGameCost").value,
-      );
+        document.getElementById('adminAddGameCost').value
+      )
 
-      const owned = document.getElementById("adminAddGameOwned").checked;
+      const owned = document.getElementById('adminAddGameOwned').checked
 
-      const enabled = document.getElementById("adminAddGameEnabled").checked;
+      const enabled = document.getElementById('adminAddGameEnabled').checked
 
-      const notes = document.getElementById("adminAddGameNotes").value.trim();
+      const notes = document.getElementById('adminAddGameNotes').value.trim()
 
       if (!gameName || !platform) {
         status.innerHTML = `
             <div class="empty">
               *** TITLE AND PLATFORM REQUIRED.
             </div>
-          `;
+          `
 
-        return;
+        return
       }
 
-      status.textContent = "SAVING TO OXNET DATABASE...";
+      status.textContent = 'SAVING TO OXNET DATABASE...'
 
       try {
-        const response = await adminFetch("/admin/library/add", {
-          method: "POST",
+        const response = await adminFetch('/admin/library/add', {
+          method: 'POST',
 
           body: JSON.stringify({
             game_name: gameName,
@@ -774,41 +779,41 @@ function renderAdminAddGameForm(games) {
 
             schmeckle_cost: schmeckleCost,
 
-            notes,
-          }),
-        });
+            notes
+          })
+        })
 
-        const data = await response.json();
+        const data = await response.json()
 
         if (!response.ok) {
-          throw new Error(data.error || `HTTP ${response.status}`);
+          throw new Error(data.error || `HTTP ${response.status}`)
         }
 
         window.alert(
-          `${data.game.game_name} (${data.game.platform}) added as ${data.game.library_code}.`,
-        );
+          `${data.game.game_name} (${data.game.platform}) added as ${data.game.library_code}.`
+        )
 
-        await loadAdminLibrary();
+        await loadAdminLibrary()
       } catch (error) {
-        console.error("Admin add game failed.", error);
+        console.error('Admin add game failed.', error)
 
         status.innerHTML = `
             <div class="empty">
               *** ${escapeHtml(error.message)}
             </div>
-          `;
+          `
       }
-    });
+    })
 }
 
-function renderAdminBulkImport(games) {
-  const container = document.getElementById("adminGameLibrary");
+function renderAdminBulkImport (games) {
+  const container = document.getElementById('adminGameLibrary')
 
   if (!container) {
-    return;
+    return
   }
 
-  let parsedGames = [];
+  let parsedGames = []
 
   container.innerHTML = `
 
@@ -925,17 +930,17 @@ function renderAdminBulkImport(games) {
       </button>
 
     </div>
-  `;
+  `
 
-  const textArea = document.getElementById("adminBulkText");
+  const textArea = document.getElementById('adminBulkText')
 
-  const fileInput = document.getElementById("adminBulkFile");
+  const fileInput = document.getElementById('adminBulkFile')
 
-  const previewContainer = document.getElementById("adminBulkPreview");
+  const previewContainer = document.getElementById('adminBulkPreview')
 
-  const status = document.getElementById("adminBulkStatus");
+  const status = document.getElementById('adminBulkStatus')
 
-  const importButton = document.getElementById("adminBulkImportSave");
+  const importButton = document.getElementById('adminBulkImportSave')
 
   /*
     ================================================
@@ -949,172 +954,172 @@ function renderAdminBulkImport(games) {
     ================================================
   */
 
-  function parseCsv(text) {
-    const rows = [];
+  function parseCsv (text) {
+    const rows = []
 
-    let row = [];
-    let field = "";
-    let quoted = false;
+    let row = []
+    let field = ''
+    let quoted = false
 
     for (let i = 0; i < text.length; i++) {
-      const char = text[i];
+      const char = text[i]
 
-      const next = text[i + 1];
+      const next = text[i + 1]
 
       if (char === '"') {
         if (quoted && next === '"') {
-          field += '"';
-          i++;
+          field += '"'
+          i++
         } else {
-          quoted = !quoted;
+          quoted = !quoted
         }
 
-        continue;
+        continue
       }
 
-      if (char === "," && !quoted) {
-        row.push(field);
-        field = "";
+      if (char === ',' && !quoted) {
+        row.push(field)
+        field = ''
 
-        continue;
+        continue
       }
 
-      if ((char === "\n" || char === "\r") && !quoted) {
-        if (char === "\r" && next === "\n") {
-          i++;
+      if ((char === '\n' || char === '\r') && !quoted) {
+        if (char === '\r' && next === '\n') {
+          i++
         }
 
-        row.push(field);
+        row.push(field)
 
-        if (row.some((value) => String(value).trim())) {
-          rows.push(row);
+        if (row.some(value => String(value).trim())) {
+          rows.push(row)
         }
 
-        row = [];
-        field = "";
+        row = []
+        field = ''
 
-        continue;
+        continue
       }
 
-      field += char;
+      field += char
     }
 
-    row.push(field);
+    row.push(field)
 
-    if (row.some((value) => String(value).trim())) {
-      rows.push(row);
+    if (row.some(value => String(value).trim())) {
+      rows.push(row)
     }
 
-    return rows;
+    return rows
   }
 
-  function normalizePlatformName(value) {
-    const raw = String(value || "").trim();
+  function normalizePlatformName (value) {
+    const raw = String(value || '').trim()
 
-    const key = raw.toLowerCase();
+    const key = raw.toLowerCase()
 
     const aliases = {
-      "nintendo entertainment system": "NES",
+      'nintendo entertainment system': 'NES',
 
-      nes: "NES",
+      nes: 'NES',
 
-      "super nintendo entertainment system": "SNES",
+      'super nintendo entertainment system': 'SNES',
 
-      "super nintendo": "SNES",
+      'super nintendo': 'SNES',
 
-      snes: "SNES",
+      snes: 'SNES',
 
-      "nintendo 64": "N64",
+      'nintendo 64': 'N64',
 
-      n64: "N64",
+      n64: 'N64',
 
-      "game boy": "GAME BOY",
+      'game boy': 'GAME BOY',
 
-      "game boy color": "GBC",
+      'game boy color': 'GBC',
 
-      "game boy advance": "GBA",
+      'game boy advance': 'GBA',
 
-      "sega genesis": "GENESIS",
+      'sega genesis': 'GENESIS',
 
-      genesis: "GENESIS",
+      genesis: 'GENESIS',
 
-      "sega mega drive": "GENESIS",
+      'sega mega drive': 'GENESIS',
 
-      "mega drive": "GENESIS",
+      'mega drive': 'GENESIS',
 
-      "sega master system": "MASTER SYSTEM",
+      'sega master system': 'MASTER SYSTEM',
 
-      "sega saturn": "SATURN",
+      'sega saturn': 'SATURN',
 
-      saturn: "SATURN",
+      saturn: 'SATURN',
 
-      "sega dreamcast": "DREAMCAST",
+      'sega dreamcast': 'DREAMCAST',
 
-      dreamcast: "DREAMCAST",
+      dreamcast: 'DREAMCAST',
 
-      "sony playstation": "PS1",
+      'sony playstation': 'PS1',
 
-      playstation: "PS1",
+      playstation: 'PS1',
 
-      "playstation 1": "PS1",
+      'playstation 1': 'PS1',
 
-      ps1: "PS1",
+      ps1: 'PS1',
 
-      psx: "PS1",
+      psx: 'PS1',
 
-      "turbografx-16": "TG16",
+      'turbografx-16': 'TG16',
 
-      "turbografx 16": "TG16",
+      'turbografx 16': 'TG16',
 
-      "pc engine": "TG16",
+      'pc engine': 'TG16',
 
-      "neo geo": "NEO GEO",
+      'neo geo': 'NEO GEO',
 
-      msx: "MSX",
-    };
+      msx: 'MSX'
+    }
 
-    return aliases[key] || raw.toUpperCase();
+    return aliases[key] || raw.toUpperCase()
   }
 
-  function normalizeHeader(value) {
-    return String(value || "")
-      .replace(/^\uFEFF/, "")
+  function normalizeHeader (value) {
+    return String(value || '')
+      .replace(/^\uFEFF/, '')
       .trim()
       .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "_")
-      .replace(/^_+|_+$/g, "");
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '')
   }
 
-  function findColumn(headers, aliases) {
+  function findColumn (headers, aliases) {
     for (const alias of aliases) {
-      const index = headers.indexOf(alias);
+      const index = headers.indexOf(alias)
 
       if (index !== -1) {
-        return index;
+        return index
       }
     }
 
-    return -1;
+    return -1
   }
 
-  function parseBoolean(value, defaultValue) {
-    const normalized = String(value ?? "")
+  function parseBoolean (value, defaultValue) {
+    const normalized = String(value ?? '')
       .trim()
-      .toLowerCase();
+      .toLowerCase()
 
     if (!normalized) {
-      return defaultValue;
+      return defaultValue
     }
 
-    if (["true", "yes", "y", "1"].includes(normalized)) {
-      return true;
+    if (['true', 'yes', 'y', '1'].includes(normalized)) {
+      return true
     }
 
-    if (["false", "no", "n", "0"].includes(normalized)) {
-      return false;
+    if (['false', 'no', 'n', '0'].includes(normalized)) {
+      return false
     }
 
-    return defaultValue;
+    return defaultValue
   }
 
   /*
@@ -1123,14 +1128,14 @@ function renderAdminBulkImport(games) {
     ================================================
   */
 
-  function parseImportText(text) {
-    const rows = parseCsv(text);
+  function parseImportText (text) {
+    const rows = parseCsv(text)
 
     if (rows.length < 2) {
-      throw new Error("CSV needs a header row and at least one game.");
+      throw new Error('CSV needs a header row and at least one game.')
     }
 
-    const headers = rows[0].map(normalizeHeader);
+    const headers = rows[0].map(normalizeHeader)
 
     /*
       Supports both our preferred format and
@@ -1141,63 +1146,59 @@ function renderAdminBulkImport(games) {
     */
 
     const gameNameIndex = findColumn(headers, [
-      "game_name",
-      "game",
-      "game_title",
-      "title",
-      "name",
-    ]);
+      'game_name',
+      'game',
+      'game_title',
+      'title',
+      'name'
+    ])
 
-    const platformIndex = findColumn(headers, [
-      "platform",
-      "console",
-      "system",
-    ]);
+    const platformIndex = findColumn(headers, ['platform', 'console', 'system'])
 
-    const requestTypeIndex = findColumn(headers, ["request_type", "type"]);
+    const requestTypeIndex = findColumn(headers, ['request_type', 'type'])
 
-    const costIndex = findColumn(headers, ["schmeckle_cost", "cost", "price"]);
+    const costIndex = findColumn(headers, ['schmeckle_cost', 'cost', 'price'])
 
-    const ownedIndex = findColumn(headers, ["owned"]);
+    const ownedIndex = findColumn(headers, ['owned'])
 
-    const enabledIndex = findColumn(headers, ["enabled"]);
+    const enabledIndex = findColumn(headers, ['enabled'])
 
-    const notesIndex = findColumn(headers, ["notes"]);
+    const notesIndex = findColumn(headers, ['notes'])
 
     if (gameNameIndex === -1) {
-      throw new Error("Could not find GAME NAME column.");
+      throw new Error('Could not find GAME NAME column.')
     }
 
     if (platformIndex === -1) {
-      throw new Error("Could not find PLATFORM or CONSOLE column.");
+      throw new Error('Could not find PLATFORM or CONSOLE column.')
     }
 
-    const output = [];
+    const output = []
 
-    const errors = [];
+    const errors = []
 
     rows.slice(1).forEach((row, index) => {
-      const gameName = String(row[gameNameIndex] || "").trim();
+      const gameName = String(row[gameNameIndex] || '').trim()
 
-      const platform = normalizePlatformName(row[platformIndex]);
+      const platform = normalizePlatformName(row[platformIndex])
 
       if (!gameName || !platform) {
-        errors.push(`Row ${index + 2}: missing game name or platform`);
+        errors.push(`Row ${index + 2}: missing game name or platform`)
 
-        return;
+        return
       }
 
       const requestType =
         requestTypeIndex !== -1
-          ? String(row[requestTypeIndex] || "schmeckles")
+          ? String(row[requestTypeIndex] || 'schmeckles')
               .trim()
               .toLowerCase()
-          : "schmeckles";
+          : 'schmeckles'
 
-      let schmeckleCost = costIndex !== -1 ? Number(row[costIndex]) : 25000;
+      let schmeckleCost = costIndex !== -1 ? Number(row[costIndex]) : 25000
 
       if (!Number.isInteger(schmeckleCost) || schmeckleCost < 0) {
-        schmeckleCost = 25000;
+        schmeckleCost = 25000
       }
 
       output.push({
@@ -1214,18 +1215,18 @@ function renderAdminBulkImport(games) {
         enabled:
           enabledIndex !== -1 ? parseBoolean(row[enabledIndex], true) : true,
 
-        notes: notesIndex !== -1 ? String(row[notesIndex] || "").trim() : "",
-      });
-    });
+        notes: notesIndex !== -1 ? String(row[notesIndex] || '').trim() : ''
+      })
+    })
 
     if (errors.length) {
-      console.warn("OXNET import skipped bad rows:", errors);
+      console.warn('OXNET import skipped bad rows:', errors)
     }
 
     return {
       games: output,
-      skippedRows: errors.length,
-    };
+      skippedRows: errors.length
+    }
   }
 
   /*
@@ -1234,44 +1235,44 @@ function renderAdminBulkImport(games) {
     ================================================
   */
 
-  function buildPreview() {
-    status.innerHTML = "";
-    previewContainer.innerHTML = "";
-    importButton.style.display = "none";
+  function buildPreview () {
+    status.innerHTML = ''
+    previewContainer.innerHTML = ''
+    importButton.style.display = 'none'
 
-    parsedGames = [];
+    parsedGames = []
 
     try {
-      const parsed = parseImportText(textArea.value);
+      const parsed = parseImportText(textArea.value)
 
-      parsedGames = parsed.games;
+      parsedGames = parsed.games
 
       if (!parsedGames.length) {
-        throw new Error("No valid games found.");
+        throw new Error('No valid games found.')
       }
 
       if (parsedGames.length > 90000) {
         throw new Error(
-          "OXNET currently supports a maximum of 90,000 G##### library codes.",
-        );
+          'OXNET currently supports a maximum of 90,000 G##### library codes.'
+        )
       }
 
-      const platformCounts = new Map();
+      const platformCounts = new Map()
 
-      parsedGames.forEach((game) => {
+      parsedGames.forEach(game => {
         platformCounts.set(
           game.platform,
-          (platformCounts.get(game.platform) || 0) + 1,
-        );
-      });
+          (platformCounts.get(game.platform) || 0) + 1
+        )
+      })
 
       const platformSummary = Array.from(platformCounts.entries())
         .sort((a, b) => a[0].localeCompare(b[0]))
         .map(
           ([platform, count]) =>
-            `${escapeHtml(platform)}: ${count.toLocaleString()}`,
+            `${escapeHtml(platform)}: ${count.toLocaleString()}`
         )
-        .join("<br>");
+        .join('<br>')
 
       status.innerHTML = `
         <div
@@ -1292,7 +1293,7 @@ function renderAdminBulkImport(games) {
 
           ${platformSummary}
         </div>
-      `;
+      `
 
       /*
         Only preview first 50 so a
@@ -1312,7 +1313,7 @@ function renderAdminBulkImport(games) {
         parsedGames
           .slice(0, 50)
           .map(
-            (game) => `
+            game => `
               <div class="command-card">
 
                 <div class="command-title">
@@ -1335,17 +1336,17 @@ function renderAdminBulkImport(games) {
                 </div>
 
               </div>
-            `,
+            `
           )
-          .join("");
+          .join('')
 
-      importButton.style.display = "block";
+      importButton.style.display = 'block'
     } catch (error) {
       status.innerHTML = `
         <div class="empty">
           *** ${escapeHtml(error.message)}
         </div>
-      `;
+      `
     }
   }
 
@@ -1355,25 +1356,25 @@ function renderAdminBulkImport(games) {
     ================================================
   */
 
-  fileInput.addEventListener("change", async () => {
-    const file = fileInput.files?.[0];
+  fileInput.addEventListener('change', async () => {
+    const file = fileInput.files?.[0]
 
     if (!file) {
-      return;
+      return
     }
 
     try {
-      textArea.value = await file.text();
+      textArea.value = await file.text()
 
-      buildPreview();
+      buildPreview()
     } catch (error) {
       status.innerHTML = `
           <div class="empty">
             *** UNABLE TO READ CSV FILE.
           </div>
-        `;
+        `
     }
-  });
+  })
 
   /*
     ================================================
@@ -1382,12 +1383,12 @@ function renderAdminBulkImport(games) {
   */
 
   document
-    .getElementById("adminBulkPreviewBtn")
-    .addEventListener("click", buildPreview);
+    .getElementById('adminBulkPreviewBtn')
+    .addEventListener('click', buildPreview)
 
-  document.getElementById("adminBulkCancel").addEventListener("click", () => {
-    renderAdminLibrary(games);
-  });
+  document.getElementById('adminBulkCancel').addEventListener('click', () => {
+    renderAdminLibrary(games)
+  })
 
   /*
     ================================================
@@ -1399,27 +1400,27 @@ function renderAdminBulkImport(games) {
     ================================================
   */
 
-  importButton.addEventListener("click", async () => {
+  importButton.addEventListener('click', async () => {
     if (!parsedGames.length) {
-      return;
+      return
     }
 
     const confirmed = window.confirm(
-      `Import ${parsedGames.length.toLocaleString()} games into OXNET?`,
-    );
+      `Import ${parsedGames.length.toLocaleString()} games into OXNET?`
+    )
 
     if (!confirmed) {
-      return;
+      return
     }
 
-    importButton.disabled = true;
+    importButton.disabled = true
 
-    let imported = 0;
-    let skipped = 0;
+    let imported = 0
+    let skipped = 0
 
     try {
       for (let start = 0; start < parsedGames.length; start += 2000) {
-        const batch = parsedGames.slice(start, start + 2000);
+        const batch = parsedGames.slice(start, start + 2000)
 
         status.innerHTML = `
             <div
@@ -1436,47 +1437,47 @@ function renderAdminBulkImport(games) {
               /
               ${parsedGames.length.toLocaleString()}
             </div>
-          `;
+          `
 
-        const response = await adminFetch("/admin/library/bulk", {
-          method: "POST",
+        const response = await adminFetch('/admin/library/bulk', {
+          method: 'POST',
 
           body: JSON.stringify({
-            games: batch,
-          }),
-        });
+            games: batch
+          })
+        })
 
-        const data = await response.json();
+        const data = await response.json()
 
         if (!response.ok) {
           const details = Array.isArray(data.errors)
-            ? data.errors.join("\n")
-            : "";
+            ? data.errors.join('\n')
+            : ''
 
           throw new Error(
             [data.error || `HTTP ${response.status}`, details]
               .filter(Boolean)
-              .join("\n"),
-          );
+              .join('\n')
+          )
         }
 
-        imported += Number(data.imported || 0);
+        imported += Number(data.imported || 0)
 
-        skipped += Number(data.skipped || 0);
+        skipped += Number(data.skipped || 0)
       }
 
       window.alert(
         [
-          "OXNET BULK IMPORT COMPLETE",
-          "",
+          'OXNET BULK IMPORT COMPLETE',
+          '',
           `Imported: ${imported.toLocaleString()}`,
-          `Already existed / skipped: ${skipped.toLocaleString()}`,
-        ].join("\n"),
-      );
+          `Already existed / skipped: ${skipped.toLocaleString()}`
+        ].join('\n')
+      )
 
-      await loadAdminLibrary();
+      await loadAdminLibrary()
     } catch (error) {
-      console.error("OXNET bulk import failed.", error);
+      console.error('OXNET bulk import failed.', error)
 
       status.innerHTML = `
           <div class="empty">
@@ -1484,31 +1485,31 @@ function renderAdminBulkImport(games) {
             <br><br>
             ${escapeHtml(error.message)}
           </div>
-        `;
+        `
 
-      importButton.disabled = false;
+      importButton.disabled = false
     }
-  });
+  })
 }
 
-function renderAdminEditGameForm(games, game) {
-  const container = document.getElementById("adminGameLibrary");
+function renderAdminEditGameForm (games, game) {
+  const container = document.getElementById('adminGameLibrary')
 
   if (!container) {
-    return;
+    return
   }
 
   const platforms = Array.from(
     new Set(
-      games.map((item) =>
-        String(item.platform || "")
+      games.map(item =>
+        String(item.platform || '')
           .trim()
-          .toUpperCase(),
-      ),
-    ),
+          .toUpperCase()
+      )
+    )
   )
     .filter(Boolean)
-    .sort();
+    .sort()
 
   container.innerHTML = `
 
@@ -1594,13 +1595,13 @@ function renderAdminEditGameForm(games, game) {
         >
           ${platforms
             .map(
-              (platform) => `
+              platform => `
                 <option
                   value="${escapeHtml(platform)}"
                 ></option>
-              `,
+              `
             )
-            .join("")}
+            .join('')}
         </datalist>
       </label>
 
@@ -1615,28 +1616,28 @@ function renderAdminEditGameForm(games, game) {
         >
           <option
             value="schmeckles"
-            ${game.request_type === "schmeckles" ? "selected" : ""}
+            ${game.request_type === 'schmeckles' ? 'selected' : ''}
           >
             SCHMECKLES
           </option>
 
           <option
             value="donation"
-            ${game.request_type === "donation" ? "selected" : ""}
+            ${game.request_type === 'donation' ? 'selected' : ''}
           >
             DONATION ONLY
           </option>
 
           <option
             value="community"
-            ${game.request_type === "community" ? "selected" : ""}
+            ${game.request_type === 'community' ? 'selected' : ''}
           >
             COMMUNITY CHALLENGE
           </option>
 
           <option
             value="disabled"
-            ${game.request_type === "disabled" ? "selected" : ""}
+            ${game.request_type === 'disabled' ? 'selected' : ''}
           >
             DISABLED
           </option>
@@ -1663,7 +1664,7 @@ function renderAdminEditGameForm(games, game) {
         <input
           id="adminEditGameOwned"
           type="checkbox"
-          ${game.owned ? "checked" : ""}
+          ${game.owned ? 'checked' : ''}
         >
 
         OWNED
@@ -1674,7 +1675,7 @@ function renderAdminEditGameForm(games, game) {
         <input
           id="adminEditGameEnabled"
           type="checkbox"
-          ${game.enabled ? "checked" : ""}
+          ${game.enabled ? 'checked' : ''}
         >
 
         ENABLED
@@ -1691,7 +1692,7 @@ function renderAdminEditGameForm(games, game) {
           rows="4"
           maxlength="1000"
           placeholder="Optional admin notes..."
-        >${escapeHtml(game.notes || "")}</textarea>
+        >${escapeHtml(game.notes || '')}</textarea>
       </label>
 
 
@@ -1711,7 +1712,7 @@ function renderAdminEditGameForm(games, game) {
               ${escapeHtml(game.completed_at)}
             </div>
           `
-          : ""
+          : ''
       }
 
 
@@ -1731,7 +1732,7 @@ function renderAdminEditGameForm(games, game) {
       ></div>
 
     </div>
-  `;
+  `
 
   /*
     ================================================
@@ -1740,10 +1741,10 @@ function renderAdminEditGameForm(games, game) {
   */
 
   document
-    .getElementById("adminEditGameCancel")
-    .addEventListener("click", () => {
-      renderAdminPlatformLibrary(games, String(game.platform).toUpperCase());
-    });
+    .getElementById('adminEditGameCancel')
+    .addEventListener('click', () => {
+      renderAdminPlatformLibrary(games, String(game.platform).toUpperCase())
+    })
 
   /*
     ================================================
@@ -1752,39 +1753,37 @@ function renderAdminEditGameForm(games, game) {
   */
 
   document
-    .getElementById("adminEditGameSave")
-    .addEventListener("click", async () => {
-      const status = document.getElementById("adminEditGameStatus");
+    .getElementById('adminEditGameSave')
+    .addEventListener('click', async () => {
+      const status = document.getElementById('adminEditGameStatus')
 
-      const gameName = document
-        .getElementById("adminEditGameName")
-        .value.trim();
+      const gameName = document.getElementById('adminEditGameName').value.trim()
 
       const platform = document
-        .getElementById("adminEditGamePlatform")
+        .getElementById('adminEditGamePlatform')
         .value.trim()
-        .toUpperCase();
+        .toUpperCase()
 
-      const requestType = document.getElementById("adminEditGameType").value;
+      const requestType = document.getElementById('adminEditGameType').value
 
       const schmeckleCost = Number(
-        document.getElementById("adminEditGameCost").value,
-      );
+        document.getElementById('adminEditGameCost').value
+      )
 
-      const owned = document.getElementById("adminEditGameOwned").checked;
+      const owned = document.getElementById('adminEditGameOwned').checked
 
-      const enabled = document.getElementById("adminEditGameEnabled").checked;
+      const enabled = document.getElementById('adminEditGameEnabled').checked
 
-      const notes = document.getElementById("adminEditGameNotes").value.trim();
+      const notes = document.getElementById('adminEditGameNotes').value.trim()
 
       if (!gameName || !platform) {
         status.innerHTML = `
             <div class="empty">
               *** TITLE AND PLATFORM REQUIRED.
             </div>
-          `;
+          `
 
-        return;
+        return
       }
 
       if (!Number.isInteger(schmeckleCost) || schmeckleCost < 0) {
@@ -1792,16 +1791,16 @@ function renderAdminEditGameForm(games, game) {
             <div class="empty">
               *** INVALID SCHMECKLE COST.
             </div>
-          `;
+          `
 
-        return;
+        return
       }
 
-      status.textContent = "UPDATING OXNET DATABASE...";
+      status.textContent = 'UPDATING OXNET DATABASE...'
 
       try {
-        const response = await adminFetch("/admin/library/update", {
-          method: "POST",
+        const response = await adminFetch('/admin/library/update', {
+          method: 'POST',
 
           body: JSON.stringify({
             library_code: game.library_code,
@@ -1818,36 +1817,36 @@ function renderAdminEditGameForm(games, game) {
 
             schmeckle_cost: schmeckleCost,
 
-            notes,
-          }),
-        });
+            notes
+          })
+        })
 
-        const data = await response.json();
+        const data = await response.json()
 
         if (!response.ok) {
-          throw new Error(data.error || `HTTP ${response.status}`);
+          throw new Error(data.error || `HTTP ${response.status}`)
         }
 
-        window.alert(`${data.game.library_code} updated.`);
+        window.alert(`${data.game.library_code} updated.`)
 
-        await loadAdminLibrary();
+        await loadAdminLibrary()
       } catch (error) {
-        console.error("Admin edit game failed.", error);
+        console.error('Admin edit game failed.', error)
 
         status.innerHTML = `
             <div class="empty">
               *** ${escapeHtml(error.message)}
             </div>
-          `;
+          `
       }
-    });
+    })
 }
 
-function renderAdminPlatformLibrary(games, platform) {
-  const container = document.getElementById("adminGameLibrary");
+function renderAdminPlatformLibrary (games, platform) {
+  const container = document.getElementById('adminGameLibrary')
 
   if (!container) {
-    return;
+    return
   }
 
   /*
@@ -1855,10 +1854,10 @@ function renderAdminPlatformLibrary(games, platform) {
   */
 
   const platformGames = platform
-    ? games.filter((game) => String(game.platform).toUpperCase() === platform)
-    : [...games];
+    ? games.filter(game => String(game.platform).toUpperCase() === platform)
+    : [...games]
 
-  const heading = platform || "ALL GAMES";
+  const heading = platform || 'ALL GAMES'
 
   container.innerHTML = `
 
@@ -1928,11 +1927,11 @@ function renderAdminPlatformLibrary(games, platform) {
     <div
       id="adminLibraryGameList"
     ></div>
-  `;
+  `
 
-  const list = document.getElementById("adminLibraryGameList");
+  const list = document.getElementById('adminLibraryGameList')
 
-  const search = document.getElementById("adminLibrarySearch");
+  const search = document.getElementById('adminLibrarySearch')
 
   /*
     ================================================
@@ -1940,48 +1939,48 @@ function renderAdminPlatformLibrary(games, platform) {
     ================================================
   */
 
-  function renderResults(query = "") {
-    const searchText = String(query).trim().toLowerCase();
+  function renderResults (query = '') {
+    const searchText = String(query).trim().toLowerCase()
 
-    const filtered = platformGames.filter((game) => {
+    const filtered = platformGames.filter(game => {
       if (!searchText) {
-        return true;
+        return true
       }
 
       return (
-        String(game.game_name || "")
+        String(game.game_name || '')
           .toLowerCase()
           .includes(searchText) ||
-        String(game.library_code || "")
+        String(game.library_code || '')
           .toLowerCase()
           .includes(searchText)
-      );
-    });
+      )
+    })
 
     if (!filtered.length) {
       list.innerHTML = `
         <div class="empty">
           *** NO MATCHING SOFTWARE FOUND.
         </div>
-      `;
+      `
 
-      return;
+      return
     }
 
     list.innerHTML = filtered
-      .map((game) => {
-        const completed = Boolean(game.completed_at);
+      .map(game => {
+        const completed = Boolean(game.completed_at)
 
-        let status = "AVAILABLE";
+        let status = 'AVAILABLE'
 
         if (completed) {
-          status = "COMPLETED";
+          status = 'COMPLETED'
         } else if (!game.owned) {
-          status = "NOT OWNED";
+          status = 'NOT OWNED'
         } else if (!game.enabled) {
-          status = "DISABLED";
-        } else if (game.request_type !== "schmeckles") {
-          status = String(game.request_type).toUpperCase();
+          status = 'DISABLED'
+        } else if (game.request_type !== 'schmeckles') {
+          status = String(game.request_type).toUpperCase()
         }
 
         return `
@@ -2048,30 +2047,30 @@ function renderAdminPlatformLibrary(games, platform) {
 </div>
 
             </div>
-          `;
+          `
       })
-      .join("");
+      .join('')
   }
 
-  renderResults();
+  renderResults()
 
-  list.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-library-edit]");
+  list.addEventListener('click', event => {
+    const button = event.target.closest('[data-library-edit]')
 
     if (!button) {
-      return;
+      return
     }
 
-    const libraryCode = button.dataset.libraryEdit;
+    const libraryCode = button.dataset.libraryEdit
 
-    const game = games.find((item) => item.library_code === libraryCode);
+    const game = games.find(item => item.library_code === libraryCode)
 
     if (!game) {
-      return;
+      return
     }
 
-    renderAdminEditGameForm(games, game);
-  });
+    renderAdminEditGameForm(games, game)
+  })
 
   /*
     ================================================
@@ -2079,9 +2078,9 @@ function renderAdminPlatformLibrary(games, platform) {
     ================================================
   */
 
-  search.addEventListener("input", () => {
-    renderResults(search.value);
-  });
+  search.addEventListener('input', () => {
+    renderResults(search.value)
+  })
 
   /*
     ================================================
@@ -2090,14 +2089,14 @@ function renderAdminPlatformLibrary(games, platform) {
   */
 
   document
-    .getElementById("adminLibraryClearSearch")
-    .addEventListener("click", () => {
-      search.value = "";
+    .getElementById('adminLibraryClearSearch')
+    .addEventListener('click', () => {
+      search.value = ''
 
-      renderResults();
+      renderResults()
 
-      search.focus();
-    });
+      search.focus()
+    })
 
   /*
     ================================================
@@ -2105,32 +2104,32 @@ function renderAdminPlatformLibrary(games, platform) {
     ================================================
   */
 
-  document.getElementById("libraryBackBtn").addEventListener("click", () => {
-    renderAdminLibrary(games);
-  });
+  document.getElementById('libraryBackBtn').addEventListener('click', () => {
+    renderAdminLibrary(games)
+  })
 }
 
-async function loadAdminLibrary() {
-  const container = document.getElementById("adminGameLibrary");
+async function loadAdminLibrary () {
+  const container = document.getElementById('adminGameLibrary')
 
   if (!container) {
-    return;
+    return
   }
 
-  container.innerHTML = "LOADING OXNET GAME LIBRARY...";
+  container.innerHTML = 'LOADING OXNET GAME LIBRARY...'
 
   try {
-    const response = await adminFetch("/admin/library");
+    const response = await adminFetch('/admin/library')
 
-    const data = await response.json();
+    const data = await response.json()
 
     if (!response.ok) {
-      throw new Error(data.error || `HTTP ${response.status}`);
+      throw new Error(data.error || `HTTP ${response.status}`)
     }
 
-    renderAdminLibrary(data.games || []);
+    renderAdminLibrary(data.games || [])
   } catch (error) {
-    console.error("Admin game library failed.", error);
+    console.error('Admin game library failed.', error)
 
     container.innerHTML = `
       <div class="empty">
@@ -2138,72 +2137,71 @@ async function loadAdminLibrary() {
         <br><br>
         ${escapeHtml(error.message)}
       </div>
-    `;
+    `
   }
 }
 
-async function loadDashboard() {
+async function loadDashboard () {
   try {
-    const response = await adminFetch("/admin/games");
+    const response = await adminFetch('/admin/games')
 
-    const data = await response.json();
+    const data = await response.json()
 
     if (!response.ok) {
-      throw new Error(data.error || `HTTP ${response.status}`);
+      throw new Error(data.error || `HTTP ${response.status}`)
     }
 
-    document.getElementById("adminGameCount").textContent = Number(
-      data.games?.length || 0,
-    ).toLocaleString();
+    document.getElementById('adminGameCount').textContent = Number(
+      data.games?.length || 0
+    ).toLocaleString()
   } catch (error) {
-    console.error("Admin dashboard failed.", error);
+    console.error('Admin dashboard failed.', error)
 
-    document.getElementById("adminGameCount").textContent = "ERROR";
+    document.getElementById('adminGameCount').textContent = 'ERROR'
   }
 }
 
-async function verifyAdmin() {
-  const session = getSession();
+async function verifyAdmin () {
+  const session = getSession()
 
   if (!session) {
-    showDenied("TWITCH LOGIN REQUIRED");
+    showDenied('TWITCH LOGIN REQUIRED')
 
-    return;
+    return
   }
 
   try {
-    const response = await adminFetch("/admin/me");
+    const response = await adminFetch('/admin/me')
 
-    const data = await response.json();
+    const data = await response.json()
 
     if (!response.ok || !data.admin) {
       if (response.status === 401) {
-        localStorage.removeItem(SESSION_KEY);
+        localStorage.removeItem(SESSION_KEY)
       }
 
-      showDenied("ACCESS DENIED");
+      showDenied('ACCESS DENIED')
 
-      return;
+      return
     }
 
-    showAdmin(data);
+    showAdmin(data)
 
-    await loadDashboard();
+    await loadDashboard()
   } catch (error) {
-    console.error("OXNET admin verification failed.", error);
+    console.error('OXNET admin verification failed.', error)
 
-    const status = document.getElementById("adminAuthStatus");
+    const status = document.getElementById('adminAuthStatus')
 
-    status.textContent = "*** OXNET SECURITY SERVER UNAVAILABLE.";
+    status.textContent = '*** OXNET SECURITY SERVER UNAVAILABLE.'
   }
 }
 
-function startAdmin() {
-  bindNavigation();
-  bindButtons();
-  bindGameActions();
-  verifyAdmin();
+function startAdmin () {
+  bindNavigation()
+  bindButtons()
+  bindGameActions()
+  verifyAdmin()
 }
 
-startAdmin();
-
+startAdmin()

@@ -5,10 +5,12 @@ import { handleAccountRoutes } from "./routes/account.js";
 import { handleBalanceRoutes } from "./routes/balances.js";
 import { handleRedemptionRoutes } from "./routes/redemptions.js";
 import { handleGameRoutes } from "./routes/games.js";
+import { handleCommandRoutes } from "./routes/commands.js";
 import { handleAdminRoutes } from "./routes/admin.js";
 import { handleAdminGameRoutes } from "./routes/admin-games.js";
 import { handleSchmeckleJobRoutes } from "./routes/schmeckle-jobs.js";
 import { handleAdminLibraryRoutes } from "./routes/admin-library.js";
+import { handleAdminCommandRoutes } from "./routes/admin-commands.js";
 
 export default {
   async fetch(request, env) {
@@ -35,10 +37,12 @@ export default {
       handleBalanceRoutes,
       handleRedemptionRoutes,
       handleGameRoutes,
+      handleCommandRoutes,
       handleSchmeckleJobRoutes,
       handleAdminRoutes,
       handleAdminGameRoutes,
       handleAdminLibraryRoutes,
+      handleAdminCommandRoutes,
     ];
 
     for (const handler of handlers) {
