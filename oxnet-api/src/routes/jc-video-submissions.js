@@ -1,4 +1,5 @@
 import { getSession } from '../lib/auth.js'
+import { requireAdmin } from '../lib/admin.js'
 import { jsonResponse } from '../lib/http.js'
 
 const REDEMPTION_KEY = 'jc_video_queue'
@@ -321,8 +322,324 @@ async function listMine (context) {
   )
 }
 
+
+function mapAdminSubmission (row) {
+  return {
+    id: Number(row.id),
+    twitch_user_id: row.twitch_user_id,
+    twitch_login: row.twitch_login,
+    twitch_display_name: row.twitch_display_name,
+    video_url: row.video_url,
+    title: row.title,
+    note: row.note,
+    duration_seconds: row.claimed_duration_seconds,
+    cost: Number(row.cost_snapshot),
+    max_duration_seconds: row.max_duration_seconds,
+    status: row.status,
+    rejection_reason: row.rejection_reason,
+    queue_position: row.queue_position,
+    charge_transaction_id: row.charge_transaction_id,
+    submitted_at: row.submitted_at,
+    reviewed_at: row.reviewed_at,
+    approved_at: row.approved_at,
+    played_at: row.played_at,
+    reviewed_by_twitch_user_id: row.reviewed_by_twitch_user_id
+  }
+}
+
+async function listAdminSubmissions (context) {
+  const { url, sql, headers } = context
+
+  const admin = await requireAdmin(context)
+
+  if (admin.response) {
+    return admin.response
+  }
+
+  const requestedStatus = String(
+    url.searchParams.get('status') || 'pending'
+  )
+    .trim()
+    .toLowerCase()
+
+  const allowedStatuses = new Set([
+    'all',
+    'pending',
+    'approved',
+    'rejected',
+    'played',
+    'removed'
+  ])
+
+  if (!allowedStatuses.has(requestedStatus)) {
+    return jsonResponse(
+      { error: 'Invalid submission status' },
+      400,
+      headers
+    )
+  }
+
+  const rows =
+    requestedStatus === 'all'
+      ? await sql`
+          select *
+          from jc_video_submissions
+          order by
+            case status
+              when 'pending' then 0
+              when 'approved' then 1
+              else 2
+            end,
+            submitted_at desc
+          limit 500
+        `
+      : await sql`
+          select *
+          from jc_video_submissions
+          where status = ${requestedStatus}
+          order by submitted_at asc
+          limit 500
+        `
+
+  return jsonResponse(
+    {
+      status: requestedStatus,
+      count: rows.length,
+      submissions: rows.map(mapAdminSubmission)
+    },
+    200,
+    headers
+  )
+}
+
+async function approveAdminSubmission (context) {
+  const { request, sql, headers } = context
+
+  const admin = await requireAdmin(context)
+
+  if (admin.response) {
+    return admin.response
+  }
+
+  let body
+
+  try {
+    body = await request.json()
+  } catch {
+    return jsonResponse(
+      { error: 'Invalid JSON body' },
+      400,
+      headers
+    )
+  }
+
+  const submissionId = Number(body.submission_id)
+
+  if (!Number.isInteger(submissionId) || submissionId < 1) {
+    return jsonResponse(
+      { error: 'Valid submission_id is required' },
+      400,
+      headers
+    )
+  }
+
+  try {
+    const rows = await sql`
+      select oxnet_approve_jc_video_submission(
+        ${submissionId},
+        ${String(admin.session.twitch_user_id)}
+      ) as result
+    `
+
+    return jsonResponse(
+      {
+        ok: true,
+        result: rows[0].result
+      },
+      200,
+      headers
+    )
+  } catch (error) {
+    const message = String(error?.message || '')
+
+    console.error('JC video approval failed:', error)
+
+    if (message.includes('SUBMISSION_NOT_FOUND')) {
+      return jsonResponse(
+        { error: 'Submission not found' },
+        404,
+        headers
+      )
+    }
+
+    if (message.includes('SUBMISSION_NOT_PENDING')) {
+      return jsonResponse(
+        { error: 'Submission is no longer pending' },
+        409,
+        headers
+      )
+    }
+
+    if (message.includes('INSUFFICIENT_FUNDS')) {
+      return jsonResponse(
+        {
+          error:
+            'Viewer no longer has enough Schmeckles. Submission was not approved or charged.'
+        },
+        409,
+        headers
+      )
+    }
+
+    if (
+      message.includes('oxnet_approve_jc_video_submission') &&
+      message.toLowerCase().includes('does not exist')
+    ) {
+      return jsonResponse(
+        {
+          error:
+            'Approval database function is not installed yet.'
+        },
+        503,
+        headers
+      )
+    }
+
+    return jsonResponse(
+      {
+        error: 'Unable to approve submission',
+        detail: message
+      },
+      500,
+      headers
+    )
+  }
+}
+
+async function rejectAdminSubmission (context) {
+  const { request, sql, headers } = context
+
+  const admin = await requireAdmin(context)
+
+  if (admin.response) {
+    return admin.response
+  }
+
+  let body
+
+  try {
+    body = await request.json()
+  } catch {
+    return jsonResponse(
+      { error: 'Invalid JSON body' },
+      400,
+      headers
+    )
+  }
+
+  const submissionId = Number(body.submission_id)
+
+  if (!Number.isInteger(submissionId) || submissionId < 1) {
+    return jsonResponse(
+      { error: 'Valid submission_id is required' },
+      400,
+      headers
+    )
+  }
+
+  const reason = cleanText(
+    body.rejection_reason || 'Not selected for the JC queue.',
+    500
+  )
+
+  const rows = await sql`
+    update jc_video_submissions
+    set
+      status = 'rejected',
+      rejection_reason = ${reason},
+      reviewed_at = now(),
+      reviewed_by_twitch_user_id =
+        ${String(admin.session.twitch_user_id)}
+    where id = ${submissionId}
+      and status = 'pending'
+    returning *
+  `
+
+  if (!rows.length) {
+    const existing = await sql`
+      select status
+      from jc_video_submissions
+      where id = ${submissionId}
+      limit 1
+    `
+
+    if (!existing.length) {
+      return jsonResponse(
+        { error: 'Submission not found' },
+        404,
+        headers
+      )
+    }
+
+    return jsonResponse(
+      {
+        error:
+          `Submission is already ${existing[0].status}`
+      },
+      409,
+      headers
+    )
+  }
+
+  return jsonResponse(
+    {
+      ok: true,
+      charged: false,
+      submission: mapAdminSubmission(rows[0])
+    },
+    200,
+    headers
+  )
+}
+
 export async function handleJcVideoSubmissionRoutes (context) {
   const { request, url, headers } = context
+
+  if (url.pathname === '/admin/jc-video-submissions') {
+    if (request.method !== 'GET') {
+      return jsonResponse(
+        { error: 'Method not allowed' },
+        405,
+        headers
+      )
+    }
+
+    return listAdminSubmissions(context)
+  }
+
+  if (url.pathname === '/admin/jc-video-submissions/approve') {
+    if (request.method !== 'POST') {
+      return jsonResponse(
+        { error: 'Method not allowed' },
+        405,
+        headers
+      )
+    }
+
+    return approveAdminSubmission(context)
+  }
+
+  if (url.pathname === '/admin/jc-video-submissions/reject') {
+    if (request.method !== 'POST') {
+      return jsonResponse(
+        { error: 'Method not allowed' },
+        405,
+        headers
+      )
+    }
+
+    return rejectAdminSubmission(context)
+  }
 
   if (url.pathname === '/jc-video-submissions') {
     if (request.method !== 'POST') {

@@ -98,6 +98,10 @@ function bindNavigation () {
       if (target === 'commands') {
         await loadAdminCommands()
       }
+
+      if (target === 'submissions') {
+        await loadAdminSubmissions('pending')
+      }
     })
   })
 }
@@ -2141,6 +2145,422 @@ async function loadAdminLibrary () {
   }
 }
 
+
+let currentSubmissionFilter = 'pending'
+
+function formatAdminDate (value) {
+  if (!value) {
+    return '---'
+  }
+
+  const date = new Date(value)
+
+  if (Number.isNaN(date.getTime())) {
+    return String(value)
+  }
+
+  return date.toLocaleString()
+}
+
+function renderAdminSubmissions (submissions, status) {
+  const container =
+    document.getElementById('adminSubmissionQueue')
+
+  if (!container) {
+    return
+  }
+
+  currentSubmissionFilter = status
+
+  if (!submissions.length) {
+    container.innerHTML = `
+      <div class="empty">
+        *** NO ${escapeHtml(status.toUpperCase())}
+        SUBMISSIONS.
+      </div>
+    `
+
+    return
+  }
+
+  container.innerHTML = submissions
+    .map(item => {
+      const pending = item.status === 'pending'
+      const approved = item.status === 'approved'
+
+      return `
+        <div class="command-card">
+          <div class="command-title">
+            <div class="command-name">
+              #${item.id}
+              //
+              ${escapeHtml(
+                item.title ||
+                'UNTITLED INTERNET NONSENSE'
+              )}
+            </div>
+
+            <span class="badge status">
+              ${escapeHtml(item.status.toUpperCase())}
+            </span>
+
+            ${
+              item.queue_position
+                ? `
+                  <span class="badge">
+                    QUEUE #${item.queue_position}
+                  </span>
+                `
+                : ''
+            }
+
+            <span class="badge cost">
+              ${Number(item.cost || 0).toLocaleString()}
+              SCHMECKLES
+            </span>
+          </div>
+
+          <div class="command-desc">
+            SUBMITTED BY:
+            ${escapeHtml(
+              item.twitch_display_name ||
+              item.twitch_login
+            )}
+
+            <br>
+
+            LENGTH:
+            ${Number(item.duration_seconds || 0)}
+            SEC
+            /
+            ${Number(item.max_duration_seconds || 0)}
+            MAX
+
+            <br>
+
+            SUBMITTED:
+            ${escapeHtml(formatAdminDate(item.submitted_at))}
+
+            ${
+              item.note
+                ? `
+                  <br><br>
+                  NOTE:
+                  ${escapeHtml(item.note)}
+                `
+                : ''
+            }
+
+            ${
+              item.rejection_reason
+                ? `
+                  <br><br>
+                  REJECTION:
+                  ${escapeHtml(item.rejection_reason)}
+                `
+                : ''
+            }
+          </div>
+
+          <div
+            class="command-example"
+            style="
+              overflow-wrap: anywhere;
+            "
+          >
+            &gt;
+            <a
+              href="${escapeHtml(item.video_url)}"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              OPEN VIDEO
+            </a>
+
+            <br>
+
+            ${escapeHtml(item.video_url)}
+          </div>
+
+          ${
+            pending
+              ? `
+                <div
+                  style="
+                    display: flex;
+                    flex-wrap: wrap;
+                    gap: 6px;
+                    margin-top: 10px;
+                  "
+                >
+                  <button
+                    class="find-btn"
+                    data-submission-action="approve"
+                    data-submission-id="${item.id}"
+                    data-submission-cost="${Number(item.cost || 0)}"
+                  >
+                    ✓ APPROVE + CHARGE
+                  </button>
+
+                  <button
+                    class="find-btn"
+                    data-submission-action="reject"
+                    data-submission-id="${item.id}"
+                  >
+                    X REJECT
+                  </button>
+                </div>
+              `
+              : ''
+          }
+
+          ${
+            approved
+              ? `
+                <div
+                  class="status-box"
+                  style="
+                    margin-top: 10px;
+                    min-height: 0;
+                  "
+                >
+                  APPROVED //
+                  QUEUE POSITION:
+                  ${item.queue_position || '---'}
+
+                  <br>
+
+                  CHARGE TX:
+                  ${escapeHtml(
+                    item.charge_transaction_id || '---'
+                  )}
+                </div>
+              `
+              : ''
+          }
+        </div>
+      `
+    })
+    .join('')
+}
+
+async function loadAdminSubmissions (
+  status = currentSubmissionFilter
+) {
+  const container =
+    document.getElementById('adminSubmissionQueue')
+
+  if (!container) {
+    return
+  }
+
+  container.innerHTML =
+    'LOADING VIEWER SUBMISSIONS...'
+
+  try {
+    const response = await adminFetch(
+      `/admin/jc-video-submissions?status=${encodeURIComponent(status)}`
+    )
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+        `HTTP ${response.status}`
+      )
+    }
+
+    renderAdminSubmissions(
+      data.submissions || [],
+      status
+    )
+
+    if (status === 'pending') {
+      const counter =
+        document.getElementById('adminSubmissionCount')
+
+      if (counter) {
+        counter.textContent =
+          Number(data.count || 0).toLocaleString()
+      }
+    }
+  } catch (error) {
+    console.error(
+      'Admin submission queue failed.',
+      error
+    )
+
+    container.innerHTML = `
+      <div class="empty">
+        *** SUBMISSION DATABASE FAILURE.
+        <br><br>
+        ${escapeHtml(error.message)}
+      </div>
+    `
+  }
+}
+
+async function approveJcSubmission (
+  submissionId,
+  cost
+) {
+  const confirmed = window.confirm(
+    [
+      `Approve submission #${submissionId}?`,
+      '',
+      `This will charge ${Number(cost).toLocaleString()} Schmeckles`,
+      'and add the video to the JC queue.'
+    ].join('\n')
+  )
+
+  if (!confirmed) {
+    return
+  }
+
+  try {
+    const response = await adminFetch(
+      '/admin/jc-video-submissions/approve',
+      {
+        method: 'POST',
+
+        body: JSON.stringify({
+          submission_id: Number(submissionId)
+        })
+      }
+    )
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+        `HTTP ${response.status}`
+      )
+    }
+
+    const queuePosition =
+      data.result?.queue_position || '---'
+
+    window.alert(
+      [
+        'JC VIDEO APPROVED',
+        '',
+        `Queue position: ${queuePosition}`,
+        `Charged: ${Number(
+          data.result?.cost || cost
+        ).toLocaleString()} Schmeckles`
+      ].join('\n')
+    )
+
+    await loadAdminSubmissions(
+      currentSubmissionFilter
+    )
+  } catch (error) {
+    console.error(
+      'JC video approval failed.',
+      error
+    )
+
+    window.alert(
+      error.message ||
+      'OXNET rejected the approval.'
+    )
+  }
+}
+
+async function rejectJcSubmission (submissionId) {
+  const reason = window.prompt(
+    'Rejection reason shown to the viewer:',
+    'Not selected for the JC queue.'
+  )
+
+  if (reason === null) {
+    return
+  }
+
+  try {
+    const response = await adminFetch(
+      '/admin/jc-video-submissions/reject',
+      {
+        method: 'POST',
+
+        body: JSON.stringify({
+          submission_id: Number(submissionId),
+          rejection_reason: reason
+        })
+      }
+    )
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ||
+        `HTTP ${response.status}`
+      )
+    }
+
+    await loadAdminSubmissions(
+      currentSubmissionFilter
+    )
+  } catch (error) {
+    console.error(
+      'JC video rejection failed.',
+      error
+    )
+
+    window.alert(
+      error.message ||
+      'OXNET rejected the rejection. Impressive.'
+    )
+  }
+}
+
+function bindSubmissionActions () {
+  document.addEventListener('click', event => {
+    const filterButton =
+      event.target.closest('[data-submission-filter]')
+
+    if (filterButton) {
+      loadAdminSubmissions(
+        filterButton.dataset.submissionFilter
+      )
+
+      return
+    }
+
+    const actionButton =
+      event.target.closest('[data-submission-action]')
+
+    if (!actionButton) {
+      return
+    }
+
+    const submissionId =
+      actionButton.dataset.submissionId
+
+    if (
+      actionButton.dataset.submissionAction ===
+      'approve'
+    ) {
+      approveJcSubmission(
+        submissionId,
+        actionButton.dataset.submissionCost
+      )
+
+      return
+    }
+
+    if (
+      actionButton.dataset.submissionAction ===
+      'reject'
+    ) {
+      rejectJcSubmission(submissionId)
+    }
+  })
+}
+
 async function loadDashboard () {
   try {
     const response = await adminFetch('/admin/games')
@@ -2154,6 +2574,37 @@ async function loadDashboard () {
     document.getElementById('adminGameCount').textContent = Number(
       data.games?.length || 0
     ).toLocaleString()
+
+    try {
+      const submissionResponse = await adminFetch(
+        '/admin/jc-video-submissions?status=pending'
+      )
+
+      const submissionData =
+        await submissionResponse.json()
+
+      if (submissionResponse.ok) {
+        document
+          .getElementById('adminSubmissionCount')
+          .textContent =
+          Number(
+            submissionData.count || 0
+          ).toLocaleString()
+      } else {
+        document
+          .getElementById('adminSubmissionCount')
+          .textContent = 'ERROR'
+      }
+    } catch (submissionError) {
+      console.error(
+        'Admin submission count failed.',
+        submissionError
+      )
+
+      document
+        .getElementById('adminSubmissionCount')
+        .textContent = 'ERROR'
+    }
   } catch (error) {
     console.error('Admin dashboard failed.', error)
 
@@ -2201,6 +2652,7 @@ function startAdmin () {
   bindNavigation()
   bindButtons()
   bindGameActions()
+  bindSubmissionActions()
   verifyAdmin()
 }
 

@@ -217,10 +217,51 @@
                 <!-- SUBMISSIONS -->
 
                 <div class="panel admin-view" id="adminViewSubmissions" hidden>
-                  <div class="panel-header">VIEWER SUBMISSIONS</div>
+                  <div class="panel-header">
+                    VIEWER SUBMISSIONS // JC VIDEO QUEUE
+                  </div>
 
                   <div style="padding: 12px">
-                    SUBMISSION REVIEW COMING NEXT.
+                    <div
+                      style="
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 6px;
+                        margin-bottom: 10px;
+                      "
+                    >
+                      <button
+                        class="find-btn"
+                        data-submission-filter="pending"
+                      >
+                        PENDING
+                      </button>
+
+                      <button
+                        class="find-btn"
+                        data-submission-filter="approved"
+                      >
+                        APPROVED
+                      </button>
+
+                      <button
+                        class="find-btn"
+                        data-submission-filter="rejected"
+                      >
+                        REJECTED
+                      </button>
+
+                      <button
+                        class="find-btn"
+                        data-submission-filter="all"
+                      >
+                        ALL
+                      </button>
+                    </div>
+
+                    <div id="adminSubmissionQueue">
+                      LOADING VIEWER SUBMISSIONS...
+                    </div>
                   </div>
                 </div>
               </div>
@@ -230,6 +271,6 @@
       </div>
     </div>
 
-    <script type="module" src="./admin.js"></script>
+    <script type="module" src="./admin.js?v=20260827-5"></script>
   </body>
 </html>
