@@ -1,4 +1,4 @@
-import { bindCommandUI, loadCommands } from './commands.js'
+import { bindCommandUI, loadCommands } from './commands.js?v=20260827-2'
 
 import { loadAccount } from './account.js'
 

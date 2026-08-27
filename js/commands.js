@@ -1,3 +1,5 @@
+import { API_URL } from './config.js'
+
 let allCommands = []
 let currentFilter = 'all'
 
@@ -261,27 +263,87 @@ export function updateStatus () {
   `
 }
 
+async function loadStaticCommandFallback () {
+  const response = await fetch('./commands.json', {
+    cache: 'no-store'
+  })
+
+  if (!response.ok) {
+    throw new Error(
+      `Static command fallback returned ${response.status}`
+    )
+  }
+
+  const data = await response.json()
+
+  if (!Array.isArray(data)) {
+    throw new Error('Static command fallback returned invalid data')
+  }
+
+  return data
+}
+
 export async function loadCommands () {
+  let backendError = null
+
   try {
-    const response = await fetch('./commands.json', {
+    const response = await fetch(`${API_URL}/commands`, {
       cache: 'no-store'
     })
 
     if (!response.ok) {
-      throw new Error('commands.json failed to load')
+      throw new Error(
+        `Command API returned ${response.status}`
+      )
     }
 
-    allCommands = await response.json()
+    const data = await response.json()
+
+    if (!Array.isArray(data.commands)) {
+      throw new Error('Command API returned invalid data')
+    }
+
+    allCommands = data.commands
 
     updateStatus()
     renderCommands()
+
+    return
   } catch (error) {
-    console.error('OXNET command database failed.', error)
+    backendError = error
+
+    console.error(
+      'OXNET live command database failed. Trying static fallback.',
+      error
+    )
+  }
+
+  try {
+    allCommands = await loadStaticCommandFallback()
+
+    updateStatus()
+    renderCommands()
+
+    const statusBox = document.getElementById('statusBox')
+
+    if (statusBox) {
+      statusBox.innerHTML += `
+        <br>
+        COMMAND SOURCE: STATIC FALLBACK
+      `
+    }
+  } catch (fallbackError) {
+    console.error(
+      'OXNET command database and static fallback both failed.',
+      {
+        backendError,
+        fallbackError
+      }
+    )
 
     allCommands = []
 
     const statusBox = document.getElementById('statusBox')
-
     const container = document.getElementById('commandsContainer')
 
     if (statusBox) {
