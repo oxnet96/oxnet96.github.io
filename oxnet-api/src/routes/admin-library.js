@@ -311,6 +311,272 @@ export async function handleAdminLibraryRoutes(context) {
   }
 
   /*
+  ================================================
+  BULK IMPORT GAME LIBRARY
+
+  POST /admin/library/bulk
+  ================================================
+*/
+
+  if (url.pathname === "/admin/library/bulk" && request.method === "POST") {
+    try {
+      const body = await request.json();
+
+      if (!Array.isArray(body.games)) {
+        return jsonResponse(
+          {
+            error: "games array is required",
+          },
+          400,
+          headers,
+        );
+      }
+
+      if (body.games.length < 1 || body.games.length > 2000) {
+        return jsonResponse(
+          {
+            error: "Bulk import must contain between 1 and 2000 games",
+          },
+          400,
+          headers,
+        );
+      }
+
+      const allowedRequestTypes = [
+        "schmeckles",
+        "donation",
+        "community",
+        "disabled",
+      ];
+
+      /*
+      Normalize and validate rows.
+    */
+
+      const normalized = [];
+
+      const seenGames = new Set();
+
+      const errors = [];
+
+      body.games.forEach((item, index) => {
+        const gameName = String(item.game_name || "").trim();
+
+        const platform = String(item.platform || "")
+          .trim()
+          .toUpperCase();
+
+        const requestType = String(item.request_type || "schmeckles")
+          .trim()
+          .toLowerCase();
+
+        const schmeckleCost = Number(item.schmeckle_cost ?? 25000);
+
+        const owned = item.owned !== false;
+
+        const enabled = item.enabled !== false;
+
+        const notes = String(item.notes || "")
+          .trim()
+          .slice(0, 1000);
+
+        if (!gameName) {
+          errors.push(`Row ${index + 1}: game name required`);
+
+          return;
+        }
+
+        if (!platform) {
+          errors.push(`Row ${index + 1}: platform required`);
+
+          return;
+        }
+
+        if (!allowedRequestTypes.includes(requestType)) {
+          errors.push(`Row ${index + 1}: invalid request type`);
+
+          return;
+        }
+
+        if (!Number.isInteger(schmeckleCost) || schmeckleCost < 0) {
+          errors.push(`Row ${index + 1}: invalid Schmeckle cost`);
+
+          return;
+        }
+
+        /*
+          Remove duplicate title/platform
+          combinations inside the upload itself.
+        */
+
+        const gameKey = `${gameName.toLowerCase()}|${platform}`;
+
+        if (seenGames.has(gameKey)) {
+          return;
+        }
+
+        seenGames.add(gameKey);
+
+        normalized.push({
+          game_name: gameName,
+          platform,
+          owned,
+          enabled,
+          request_type: requestType,
+          schmeckle_cost: schmeckleCost,
+          notes,
+        });
+      });
+
+      if (errors.length) {
+        return jsonResponse(
+          {
+            error: "Bulk import validation failed",
+
+            errors: errors.slice(0, 100),
+          },
+          400,
+          headers,
+        );
+      }
+
+      /*
+      Load existing public G#### codes so
+      this import can generate collision-free
+      codes before inserting.
+    */
+
+      const existingCodes = await sql`
+        select library_code
+        from game_library
+        where library_code is not null
+      `;
+
+      const usedCodes = new Set(
+        existingCodes.map((row) => String(row.library_code).toUpperCase()),
+      );
+
+      function generateLibraryCode() {
+        /*
+        G1000 through G9999
+      */
+
+        if (usedCodes.size >= 9000) {
+          throw new Error("Game library code space exhausted");
+        }
+
+        for (let attempt = 0; attempt < 20000; attempt++) {
+          const number = 1000 + Math.floor(Math.random() * 9000);
+
+          const code = `G${number}`;
+
+          if (!usedCodes.has(code)) {
+            usedCodes.add(code);
+
+            return code;
+          }
+        }
+
+        throw new Error("Unable to generate library code");
+      }
+
+      const importRows = normalized.map((game) => ({
+        ...game,
+
+        library_code: generateLibraryCode(),
+      }));
+
+      const importJson = JSON.stringify(importRows);
+
+      /*
+      One bulk database operation.
+
+      Existing title/platform combinations
+      are skipped instead of duplicated.
+    */
+
+      const inserted = await sql`
+        insert into game_library (
+          library_code,
+          game_name,
+          platform,
+          owned,
+          enabled,
+          request_type,
+          schmeckle_cost,
+          notes,
+          updated_at
+        )
+
+        select
+          x.library_code,
+          x.game_name,
+          upper(x.platform),
+          x.owned,
+          x.enabled,
+          x.request_type,
+          x.schmeckle_cost,
+          nullif(x.notes, ''),
+          now()
+
+        from jsonb_to_recordset(
+          ${importJson}::jsonb
+        ) as x (
+          library_code text,
+          game_name text,
+          platform text,
+          owned boolean,
+          enabled boolean,
+          request_type text,
+          schmeckle_cost bigint,
+          notes text
+        )
+
+        on conflict do nothing
+
+        returning
+          library_code,
+          game_name,
+          platform
+      `;
+
+      return jsonResponse(
+        {
+          success: true,
+
+          submitted: body.games.length,
+
+          normalized: normalized.length,
+
+          imported: inserted.length,
+
+          skipped: normalized.length - inserted.length,
+
+          games: inserted.map((row) => ({
+            library_code: row.library_code,
+
+            game_name: row.game_name,
+
+            platform: row.platform,
+          })),
+        },
+        200,
+        headers,
+      );
+    } catch (error) {
+      console.error("Admin library bulk import failed:", error);
+
+      return jsonResponse(
+        {
+          error: error?.message || "Unable to bulk import game library",
+        },
+        500,
+        headers,
+      );
+    }
+  }
+
+  /*
     ================================================
     UPDATE GAME
 

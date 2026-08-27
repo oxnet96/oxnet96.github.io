@@ -399,10 +399,19 @@ function renderAdminLibrary(games) {
     <div
   style="
     display: flex;
+    flex-wrap: wrap;
     justify-content: flex-end;
+    gap: 6px;
     margin-bottom: 12px;
   "
 >
+  <button
+    class="find-btn"
+    id="adminBulkImportBtn"
+  >
+    BULK IMPORT
+  </button>
+
   <button
     class="find-btn"
     id="adminAddGameBtn"
@@ -495,6 +504,15 @@ function renderAdminLibrary(games) {
         renderAdminPlatformLibrary(games, platform);
       });
     });
+  
+  const bulkImportBtn = document.getElementById("adminBulkImportBtn");
+
+  if (bulkImportBtn) {
+    bulkImportBtn.addEventListener("click", () => {
+      renderAdminBulkImport(games);
+    });
+  }
+
   const addGameBtn = document.getElementById("adminAddGameBtn");
 
   if (addGameBtn) {
@@ -781,6 +799,630 @@ function renderAdminAddGameForm(games) {
           `;
       }
     });
+}
+
+function renderAdminBulkImport(games) {
+  const container = document.getElementById("adminGameLibrary");
+
+  if (!container) {
+    return;
+  }
+
+  let parsedGames = [];
+
+  container.innerHTML = `
+
+    <div
+      style="
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+      "
+    >
+      <button
+        class="find-btn"
+        id="adminBulkCancel"
+      >
+        &lt; CANCEL
+      </button>
+
+      <div
+        class="status-box"
+        style="
+          margin: 0;
+          flex: 1;
+          min-height: 0;
+        "
+      >
+        OXNET GAME LIBRARY //
+        BULK IMPORT
+      </div>
+    </div>
+
+
+    <div
+      class="command-card"
+      style="
+        display: grid;
+        gap: 12px;
+      "
+    >
+
+      <div class="command-desc">
+        UPLOAD A CSV OR PASTE CSV DATA BELOW.
+        <br><br>
+        REQUIRED:
+        <b>GAME NAME</b> + <b>PLATFORM/CONSOLE</b>
+        <br>
+        EVERYTHING ELSE CAN USE DEFAULTS.
+      </div>
+
+
+      <div class="command-example">
+        game_name,platform,request_type,schmeckle_cost,owned,enabled
+        <br>
+        Super Metroid,SNES,schmeckles,25000,true,true
+      </div>
+
+
+      <label>
+        CSV FILE
+        <br>
+
+        <input
+          id="adminBulkFile"
+          class="search"
+          type="file"
+          accept=".csv,text/csv"
+        >
+      </label>
+
+
+      <label>
+        OR PASTE CSV
+        <br>
+
+        <textarea
+          id="adminBulkText"
+          class="search"
+          rows="12"
+          placeholder="game_name,platform&#10;Super Mario Bros.,NES&#10;Sonic the Hedgehog,GENESIS"
+        ></textarea>
+      </label>
+
+
+      <button
+        class="find-btn"
+        id="adminBulkPreviewBtn"
+        style="
+          min-height: 44px;
+        "
+      >
+        PREVIEW IMPORT
+      </button>
+
+
+      <div
+        id="adminBulkStatus"
+      ></div>
+
+
+      <div
+        id="adminBulkPreview"
+      ></div>
+
+
+      <button
+        class="find-btn"
+        id="adminBulkImportSave"
+        style="
+          min-height: 44px;
+          display: none;
+        "
+      >
+        IMPORT GAMES
+      </button>
+
+    </div>
+  `;
+
+  const textArea = document.getElementById("adminBulkText");
+
+  const fileInput = document.getElementById("adminBulkFile");
+
+  const previewContainer = document.getElementById("adminBulkPreview");
+
+  const status = document.getElementById("adminBulkStatus");
+
+  const importButton = document.getElementById("adminBulkImportSave");
+
+  /*
+    ================================================
+    CSV PARSER
+
+    Handles:
+    commas
+    quoted fields
+    escaped quotes
+    Windows line endings
+    ================================================
+  */
+
+  function parseCsv(text) {
+    const rows = [];
+
+    let row = [];
+    let field = "";
+    let quoted = false;
+
+    for (let i = 0; i < text.length; i++) {
+      const char = text[i];
+
+      const next = text[i + 1];
+
+      if (char === '"') {
+        if (quoted && next === '"') {
+          field += '"';
+          i++;
+        } else {
+          quoted = !quoted;
+        }
+
+        continue;
+      }
+
+      if (char === "," && !quoted) {
+        row.push(field);
+        field = "";
+
+        continue;
+      }
+
+      if ((char === "\n" || char === "\r") && !quoted) {
+        if (char === "\r" && next === "\n") {
+          i++;
+        }
+
+        row.push(field);
+
+        if (row.some((value) => String(value).trim())) {
+          rows.push(row);
+        }
+
+        row = [];
+        field = "";
+
+        continue;
+      }
+
+      field += char;
+    }
+
+    row.push(field);
+
+    if (row.some((value) => String(value).trim())) {
+      rows.push(row);
+    }
+
+    return rows;
+  }
+
+  function normalizeHeader(value) {
+    return String(value || "")
+      .replace(/^\uFEFF/, "")
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "_")
+      .replace(/^_+|_+$/g, "");
+  }
+
+  function findColumn(headers, aliases) {
+    for (const alias of aliases) {
+      const index = headers.indexOf(alias);
+
+      if (index !== -1) {
+        return index;
+      }
+    }
+
+    return -1;
+  }
+
+  function parseBoolean(value, defaultValue) {
+    const normalized = String(value ?? "")
+      .trim()
+      .toLowerCase();
+
+    if (!normalized) {
+      return defaultValue;
+    }
+
+    if (["true", "yes", "y", "1"].includes(normalized)) {
+      return true;
+    }
+
+    if (["false", "no", "n", "0"].includes(normalized)) {
+      return false;
+    }
+
+    return defaultValue;
+  }
+
+  /*
+    ================================================
+    CONVERT CSV → OXNET GAMES
+    ================================================
+  */
+
+  function parseImportText(text) {
+    const rows = parseCsv(text);
+
+    if (rows.length < 2) {
+      throw new Error("CSV needs a header row and at least one game.");
+    }
+
+    const headers = rows[0].map(normalizeHeader);
+
+    /*
+      Supports both our preferred format and
+      ordinary ROM inventory CSV names such as:
+
+      Game Name
+      Console
+    */
+
+    const gameNameIndex = findColumn(headers, [
+      "game_name",
+      "game",
+      "game_title",
+      "title",
+      "name",
+    ]);
+
+    const platformIndex = findColumn(headers, [
+      "platform",
+      "console",
+      "system",
+    ]);
+
+    const requestTypeIndex = findColumn(headers, ["request_type", "type"]);
+
+    const costIndex = findColumn(headers, ["schmeckle_cost", "cost", "price"]);
+
+    const ownedIndex = findColumn(headers, ["owned"]);
+
+    const enabledIndex = findColumn(headers, ["enabled"]);
+
+    const notesIndex = findColumn(headers, ["notes"]);
+
+    if (gameNameIndex === -1) {
+      throw new Error("Could not find GAME NAME column.");
+    }
+
+    if (platformIndex === -1) {
+      throw new Error("Could not find PLATFORM or CONSOLE column.");
+    }
+
+    const output = [];
+
+    const errors = [];
+
+    rows.slice(1).forEach((row, index) => {
+      const gameName = String(row[gameNameIndex] || "").trim();
+
+      const platform = String(row[platformIndex] || "")
+        .trim()
+        .toUpperCase();
+
+      if (!gameName || !platform) {
+        errors.push(`Row ${index + 2}: missing game name or platform`);
+
+        return;
+      }
+
+      const requestType =
+        requestTypeIndex !== -1
+          ? String(row[requestTypeIndex] || "schmeckles")
+              .trim()
+              .toLowerCase()
+          : "schmeckles";
+
+      let schmeckleCost = costIndex !== -1 ? Number(row[costIndex]) : 25000;
+
+      if (!Number.isInteger(schmeckleCost) || schmeckleCost < 0) {
+        schmeckleCost = 25000;
+      }
+
+      output.push({
+        game_name: gameName,
+
+        platform,
+
+        request_type: requestType,
+
+        schmeckle_cost: schmeckleCost,
+
+        owned: ownedIndex !== -1 ? parseBoolean(row[ownedIndex], true) : true,
+
+        enabled:
+          enabledIndex !== -1 ? parseBoolean(row[enabledIndex], true) : true,
+
+        notes: notesIndex !== -1 ? String(row[notesIndex] || "").trim() : "",
+      });
+    });
+
+    if (errors.length) {
+      console.warn("OXNET import skipped bad rows:", errors);
+    }
+
+    return {
+      games: output,
+      skippedRows: errors.length,
+    };
+  }
+
+  /*
+    ================================================
+    PREVIEW
+    ================================================
+  */
+
+  function buildPreview() {
+    status.innerHTML = "";
+    previewContainer.innerHTML = "";
+    importButton.style.display = "none";
+
+    parsedGames = [];
+
+    try {
+      const parsed = parseImportText(textArea.value);
+
+      parsedGames = parsed.games;
+
+      if (!parsedGames.length) {
+        throw new Error("No valid games found.");
+      }
+
+      if (parsedGames.length > 9000) {
+        throw new Error(
+          "OXNET currently supports a maximum of 9,000 G#### library codes.",
+        );
+      }
+
+      const platformCounts = new Map();
+
+      parsedGames.forEach((game) => {
+        platformCounts.set(
+          game.platform,
+          (platformCounts.get(game.platform) || 0) + 1,
+        );
+      });
+
+      const platformSummary = Array.from(platformCounts.entries())
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .map(
+          ([platform, count]) =>
+            `${escapeHtml(platform)}: ${count.toLocaleString()}`,
+        )
+        .join("<br>");
+
+      status.innerHTML = `
+        <div
+          class="status-box"
+          style="
+            margin: 0;
+            min-height: 0;
+          "
+        >
+          VALID GAMES:
+          ${parsedGames.length.toLocaleString()}
+          <br>
+
+          BAD ROWS SKIPPED:
+          ${parsed.skippedRows.toLocaleString()}
+
+          <br><br>
+
+          ${platformSummary}
+        </div>
+      `;
+
+      /*
+        Only preview first 50 so a
+        5,000-game library doesn't
+        murder the browser.
+      */
+
+      previewContainer.innerHTML =
+        `
+          <div class="panel-header">
+            IMPORT PREVIEW //
+            FIRST
+            ${Math.min(parsedGames.length, 50)}
+            TITLES
+          </div>
+        ` +
+        parsedGames
+          .slice(0, 50)
+          .map(
+            (game) => `
+              <div class="command-card">
+
+                <div class="command-title">
+
+                  <div class="command-name">
+                    ${escapeHtml(game.game_name)}
+                  </div>
+
+                  <span class="badge">
+                    ${escapeHtml(game.platform)}
+                  </span>
+
+                </div>
+
+                <div class="command-desc">
+                  ${escapeHtml(game.request_type)}
+                  //
+                  ${Number(game.schmeckle_cost).toLocaleString()}
+                  SCHMECKLES
+                </div>
+
+              </div>
+            `,
+          )
+          .join("");
+
+      importButton.style.display = "block";
+    } catch (error) {
+      status.innerHTML = `
+        <div class="empty">
+          *** ${escapeHtml(error.message)}
+        </div>
+      `;
+    }
+  }
+
+  /*
+    ================================================
+    FILE UPLOAD
+    ================================================
+  */
+
+  fileInput.addEventListener("change", async () => {
+    const file = fileInput.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    try {
+      textArea.value = await file.text();
+
+      buildPreview();
+    } catch (error) {
+      status.innerHTML = `
+          <div class="empty">
+            *** UNABLE TO READ CSV FILE.
+          </div>
+        `;
+    }
+  });
+
+  /*
+    ================================================
+    BUTTONS
+    ================================================
+  */
+
+  document
+    .getElementById("adminBulkPreviewBtn")
+    .addEventListener("click", buildPreview);
+
+  document.getElementById("adminBulkCancel").addEventListener("click", () => {
+    renderAdminLibrary(games);
+  });
+
+  /*
+    ================================================
+    IMPORT
+
+    Backend accepts max 2,000 per
+    request, so large libraries are
+    automatically sent in batches.
+    ================================================
+  */
+
+  importButton.addEventListener("click", async () => {
+    if (!parsedGames.length) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Import ${parsedGames.length.toLocaleString()} games into OXNET?`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    importButton.disabled = true;
+
+    let imported = 0;
+    let skipped = 0;
+
+    try {
+      for (let start = 0; start < parsedGames.length; start += 2000) {
+        const batch = parsedGames.slice(start, start + 2000);
+
+        status.innerHTML = `
+            <div
+              class="status-box"
+              style="
+                margin: 0;
+                min-height: 0;
+              "
+            >
+              IMPORTING...
+              <br>
+              PROCESSED:
+              ${Math.min(start, parsedGames.length).toLocaleString()}
+              /
+              ${parsedGames.length.toLocaleString()}
+            </div>
+          `;
+
+        const response = await adminFetch("/admin/library/bulk", {
+          method: "POST",
+
+          body: JSON.stringify({
+            games: batch,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          const details = Array.isArray(data.errors)
+            ? data.errors.join("\n")
+            : "";
+
+          throw new Error(
+            [data.error || `HTTP ${response.status}`, details]
+              .filter(Boolean)
+              .join("\n"),
+          );
+        }
+
+        imported += Number(data.imported || 0);
+
+        skipped += Number(data.skipped || 0);
+      }
+
+      window.alert(
+        [
+          "OXNET BULK IMPORT COMPLETE",
+          "",
+          `Imported: ${imported.toLocaleString()}`,
+          `Already existed / skipped: ${skipped.toLocaleString()}`,
+        ].join("\n"),
+      );
+
+      await loadAdminLibrary();
+    } catch (error) {
+      console.error("OXNET bulk import failed.", error);
+
+      status.innerHTML = `
+          <div class="empty">
+            *** BULK IMPORT FAILED.
+            <br><br>
+            ${escapeHtml(error.message)}
+          </div>
+        `;
+
+      importButton.disabled = false;
+    }
+  });
 }
 
 function renderAdminEditGameForm(games, game) {
