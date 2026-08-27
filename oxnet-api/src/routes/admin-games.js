@@ -15,7 +15,11 @@ export async function handleAdminGameRoutes (context) {
     headers
   } = context
 
-  if (!url.pathname.startsWith('/admin/games')) {
+  if (
+    !url.pathname.startsWith(
+      '/admin/games'
+    )
+  ) {
     return null
   }
 
@@ -30,6 +34,7 @@ export async function handleAdminGameRoutes (context) {
   /*
     ================================================
     LIST ACTIVE GAME QUEUE
+
     GET /admin/games
     ================================================
   */
@@ -43,9 +48,14 @@ export async function handleAdminGameRoutes (context) {
         await sql`
           select
             id,
+            request_code,
+            game_library_id,
             twitch_login,
             twitch_display_name,
             game_name,
+            platform,
+            cost_paid,
+            refund_status,
             priority,
             status,
             requested_at,
@@ -72,11 +82,31 @@ export async function handleAdminGameRoutes (context) {
           games:
             rows.map(
               (row, index) => ({
+                /*
+                  "id" is kept for frontend
+                  compatibility, but it is now
+                  the PUBLIC request code.
+                */
+
                 id:
-                  Number(row.id),
+                  Number(
+                    row.request_code
+                  ),
+
+                request_code:
+                  Number(
+                    row.request_code
+                  ),
 
                 position:
                   index + 1,
+
+                game_library_id:
+                  row.game_library_id
+                    ? Number(
+                        row.game_library_id
+                      )
+                    : null,
 
                 requested_by:
                   row.twitch_display_name ||
@@ -85,8 +115,21 @@ export async function handleAdminGameRoutes (context) {
                 game_name:
                   row.game_name,
 
+                platform:
+                  row.platform,
+
+                cost_paid:
+                  Number(
+                    row.cost_paid || 0
+                  ),
+
+                refund_status:
+                  row.refund_status,
+
                 priority:
-                  Number(row.priority),
+                  Number(
+                    row.priority
+                  ),
 
                 status:
                   row.status,
@@ -102,6 +145,7 @@ export async function handleAdminGameRoutes (context) {
         200,
         headers
       )
+
     } catch (error) {
       console.error(
         'Admin game list failed:',
@@ -122,8 +166,19 @@ export async function handleAdminGameRoutes (context) {
 
   /*
     ================================================
-    MANUALLY ADD GAME
+    MANUALLY ADD LIBRARY GAME
+
     POST /admin/games/add
+
+    {
+      "library_code": "G4821"
+    }
+
+    Admin-added games:
+    - must exist in game_library
+    - are linked to the library
+    - cost 0 Schmeckles
+    - receive a normal 5-digit Request ID
     ================================================
   */
 
@@ -135,42 +190,105 @@ export async function handleAdminGameRoutes (context) {
       const body =
         await request.json()
 
-      const gameName =
+      const libraryCode =
         String(
-          body.game_name || ''
-        ).trim()
+          body.library_code || ''
+        )
+          .trim()
+          .toUpperCase()
 
-      if (!gameName) {
+      if (!libraryCode) {
         return jsonResponse(
           {
             error:
-              'Game name is required'
+              'Library code is required'
           },
           400,
           headers
         )
       }
 
-      if (gameName.length > 120) {
+
+      /*
+        Resolve the canonical library game.
+      */
+
+      const libraryRows =
+        await sql`
+          select
+            id,
+            library_code,
+            game_name,
+            platform,
+            owned,
+            enabled,
+            completed_at
+          from game_library
+          where
+            upper(library_code) =
+              ${libraryCode}
+          limit 1
+        `
+
+      if (!libraryRows.length) {
         return jsonResponse(
           {
             error:
-              'Game name is too long'
+              'Library code not found'
           },
-          400,
+          404,
           headers
         )
       }
+
+      const game =
+        libraryRows[0]
+
+
+      /*
+        Avoid accidental replays from the
+        normal manual-add button.
+
+        We can build an explicit admin
+        override later if desired.
+      */
+
+      if (game.completed_at) {
+        return jsonResponse(
+          {
+            error:
+              'Game has already been completed',
+
+            library_code:
+              game.library_code,
+
+            game_name:
+              game.game_name,
+
+            platform:
+              game.platform
+          },
+          409,
+          headers
+        )
+      }
+
+
+      /*
+        Same exact library game cannot
+        already be queued/playing.
+      */
 
       const existing =
         await sql`
           select
-            id,
-            game_name
+            request_code,
+            game_name,
+            platform
           from game_requests
           where
-            lower(game_name) =
-              lower(${gameName})
+            game_library_id =
+              ${game.id}
             and status in (
               'queued',
               'playing'
@@ -183,18 +301,45 @@ export async function handleAdminGameRoutes (context) {
           {
             error:
               'Game is already active',
+
             request_id:
-              Number(existing[0].id),
+              Number(
+                existing[0]
+                  .request_code
+              ),
+
             game_name:
-              existing[0].game_name
+              existing[0]
+                .game_name,
+
+            platform:
+              existing[0]
+                .platform
           },
           409,
           headers
         )
       }
 
+
+      /*
+        Synthetic admin requester.
+
+        A unique Twitch user ID prevents
+        the one-active-request-per-viewer
+        constraint from blocking other
+        admin queue additions.
+      */
+
       const syntheticUserId =
         `admin:${crypto.randomUUID()}`
+
+
+      /*
+        request_code is generated by Neon.
+        cost_paid = 0 because this did not
+        originate from a viewer purchase.
+      */
 
       const rows =
         await sql`
@@ -202,7 +347,10 @@ export async function handleAdminGameRoutes (context) {
             twitch_user_id,
             twitch_login,
             twitch_display_name,
+            game_library_id,
             game_name,
+            platform,
+            cost_paid,
             priority,
             status
           )
@@ -210,13 +358,19 @@ export async function handleAdminGameRoutes (context) {
             ${syntheticUserId},
             'oxnet_admin',
             'OXNET ADMIN',
-            ${gameName},
+            ${game.id},
+            ${game.game_name},
+            ${game.platform},
+            0,
             0,
             'queued'
           )
           returning
-            id,
+            request_code,
+            game_library_id,
             game_name,
+            platform,
+            cost_paid,
             status,
             requested_at
         `
@@ -224,23 +378,66 @@ export async function handleAdminGameRoutes (context) {
       return jsonResponse(
         {
           success: true,
+
           request_id:
-            Number(rows[0].id),
+            Number(
+              rows[0]
+                .request_code
+            ),
+
+          request_code:
+            Number(
+              rows[0]
+                .request_code
+            ),
+
+          game_library_id:
+            Number(
+              rows[0]
+                .game_library_id
+            ),
+
           game_name:
             rows[0].game_name,
+
+          platform:
+            rows[0].platform,
+
+          cost_paid:
+            Number(
+              rows[0].cost_paid
+            ),
+
           status:
             rows[0].status,
+
           requested_at:
-            rows[0].requested_at
+            rows[0]
+              .requested_at
         },
         201,
         headers
       )
+
     } catch (error) {
       console.error(
         'Admin add game failed:',
         error
       )
+
+      if (
+        error &&
+        error.code === '23505'
+      ) {
+        return jsonResponse(
+          {
+            error:
+              'Game conflicts with an active request'
+          },
+          409,
+          headers
+        )
+      }
 
       return jsonResponse(
         {
@@ -261,21 +458,25 @@ export async function handleAdminGameRoutes (context) {
     POST /admin/games/status
 
     {
-      "request_id": 12,
+      "request_id": 48317,
       "status": "playing"
     }
+
+    request_id is ALWAYS the public
+    5-digit Request ID.
     ================================================
   */
 
   if (
-    url.pathname === '/admin/games/status' &&
+    url.pathname ===
+      '/admin/games/status' &&
     request.method === 'POST'
   ) {
     try {
       const body =
         await request.json()
 
-      const requestId =
+      const requestCode =
         Number(
           body.request_id
         )
@@ -292,9 +493,18 @@ export async function handleAdminGameRoutes (context) {
         'rejected'
       ]
 
+
+      /*
+        Public Request IDs are always
+        five digits.
+      */
+
       if (
-        !Number.isInteger(requestId) ||
-        requestId <= 0
+        !Number.isInteger(
+          requestCode
+        ) ||
+        requestCode < 10000 ||
+        requestCode > 99999
       ) {
         return jsonResponse(
           {
@@ -305,6 +515,7 @@ export async function handleAdminGameRoutes (context) {
           headers
         )
       }
+
 
       if (
         !allowedStatuses.includes(
@@ -323,18 +534,61 @@ export async function handleAdminGameRoutes (context) {
 
 
       /*
-        PLAYING
-
-        Only one game may be marked
-        playing at a time.
+        Resolve the public Request ID
+        to our private database primary key.
       */
 
-      if (newStatus === 'playing') {
+      const target =
+        await sql`
+          select
+            id,
+            request_code,
+            game_name,
+            platform,
+            status
+          from game_requests
+          where
+            request_code =
+              ${requestCode}
+          limit 1
+        `
+
+      if (!target.length) {
+        return jsonResponse(
+          {
+            error:
+              'Game request not found'
+          },
+          404,
+          headers
+        )
+      }
+
+      const internalId =
+        Number(
+          target[0].id
+        )
+
+
+      /*
+        ==============================================
+        PLAY
+
+        Only one game may be marked
+        PLAYING at a time.
+        ==============================================
+      */
+
+      if (
+        newStatus === 'playing'
+      ) {
         const currentPlaying =
           await sql`
             select
               id,
-              game_name
+              request_code,
+              game_name,
+              platform
             from game_requests
             where status = 'playing'
             limit 1
@@ -344,7 +598,7 @@ export async function handleAdminGameRoutes (context) {
           currentPlaying.length > 0 &&
           Number(
             currentPlaying[0].id
-          ) !== requestId
+          ) !== internalId
         ) {
           return jsonResponse(
             {
@@ -353,36 +607,49 @@ export async function handleAdminGameRoutes (context) {
 
               request_id:
                 Number(
-                  currentPlaying[0].id
+                  currentPlaying[0]
+                    .request_code
                 ),
 
               game_name:
-                currentPlaying[0].game_name
+                currentPlaying[0]
+                  .game_name,
+
+              platform:
+                currentPlaying[0]
+                  .platform
             },
             409,
             headers
           )
         }
 
+
         const rows =
           await sql`
             update game_requests
             set
               status = 'playing',
+
               started_at =
                 coalesce(
                   started_at,
                   now()
                 )
+
             where
-              id = ${requestId}
+              id =
+                ${internalId}
+
               and status in (
                 'queued',
                 'playing'
               )
+
             returning
-              id,
+              request_code,
               game_name,
+              platform,
               status
           `
 
@@ -397,13 +664,23 @@ export async function handleAdminGameRoutes (context) {
           )
         }
 
+
         return jsonResponse(
           {
             success: true,
+
             request_id:
-              Number(rows[0].id),
+              Number(
+                rows[0]
+                  .request_code
+              ),
+
             game_name:
               rows[0].game_name,
+
+            platform:
+              rows[0].platform,
+
             status:
               rows[0].status
           },
@@ -414,10 +691,19 @@ export async function handleAdminGameRoutes (context) {
 
 
       /*
+        ==============================================
         COMPLETE / REMOVE / REJECT
+        ==============================================
+
+        COMPLETE also triggers our Neon
+        library completion trigger.
+
+        REJECT triggers the refund queue
+        automatically when cost_paid > 0.
       */
 
       let rows
+
 
       if (
         newStatus === 'completed'
@@ -426,17 +712,27 @@ export async function handleAdminGameRoutes (context) {
           await sql`
             update game_requests
             set
-              status = 'completed',
-              completed_at = now()
+              status =
+                'completed',
+
+              completed_at =
+                now()
+
             where
-              id = ${requestId}
+              id =
+                ${internalId}
+
               and status in (
                 'queued',
                 'playing'
               )
+
             returning
-              id,
+              request_code,
               game_name,
+              platform,
+              cost_paid,
+              refund_status,
               status
           `
       } else {
@@ -444,19 +740,28 @@ export async function handleAdminGameRoutes (context) {
           await sql`
             update game_requests
             set
-              status = ${newStatus}
+              status =
+                ${newStatus}
+
             where
-              id = ${requestId}
+              id =
+                ${internalId}
+
               and status in (
                 'queued',
                 'playing'
               )
+
             returning
-              id,
+              request_code,
               game_name,
+              platform,
+              cost_paid,
+              refund_status,
               status
           `
       }
+
 
       if (!rows.length) {
         return jsonResponse(
@@ -469,13 +774,33 @@ export async function handleAdminGameRoutes (context) {
         )
       }
 
+
       return jsonResponse(
         {
           success: true,
+
           request_id:
-            Number(rows[0].id),
+            Number(
+              rows[0]
+                .request_code
+            ),
+
           game_name:
             rows[0].game_name,
+
+          platform:
+            rows[0].platform,
+
+          cost_paid:
+            Number(
+              rows[0]
+                .cost_paid || 0
+            ),
+
+          refund_status:
+            rows[0]
+              .refund_status,
+
           status:
             rows[0].status
         },
@@ -500,6 +825,12 @@ export async function handleAdminGameRoutes (context) {
     }
   }
 
+
+  /*
+    ================================================
+    ADMIN GAME ROUTE NOT FOUND
+    ================================================
+  */
 
   return jsonResponse(
     {
