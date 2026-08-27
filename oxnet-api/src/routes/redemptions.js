@@ -16,7 +16,8 @@ export async function handleRedemptionRoutes (context) {
         category,
         cost,
         cooldown_seconds,
-        enabled
+        enabled,
+        max_duration_seconds
       from redemptions
       where enabled = true
       order by cost asc
@@ -31,7 +32,8 @@ export async function handleRedemptionRoutes (context) {
           category: item.category,
           cost: Number(item.cost),
           cooldown_seconds: item.cooldown_seconds,
-          enabled: item.enabled
+          enabled: item.enabled,
+          max_duration_seconds: item.max_duration_seconds
         }))
       },
       200,

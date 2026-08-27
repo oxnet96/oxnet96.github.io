@@ -11,6 +11,7 @@ import { handleAdminGameRoutes } from "./routes/admin-games.js";
 import { handleSchmeckleJobRoutes } from "./routes/schmeckle-jobs.js";
 import { handleAdminLibraryRoutes } from "./routes/admin-library.js";
 import { handleAdminCommandRoutes } from "./routes/admin-commands.js";
+import { handleJcVideoSubmissionRoutes } from "./routes/jc-video-submissions.js";
 
 export default {
   async fetch(request, env) {
@@ -36,6 +37,7 @@ export default {
       handleAccountRoutes,
       handleBalanceRoutes,
       handleRedemptionRoutes,
+      handleJcVideoSubmissionRoutes,
       handleGameRoutes,
       handleCommandRoutes,
       handleSchmeckleJobRoutes,
