@@ -1008,6 +1008,74 @@ function renderAdminBulkImport(games) {
     return rows;
   }
 
+  function normalizePlatformName(value) {
+    const raw = String(value || "").trim();
+
+    const key = raw.toLowerCase();
+
+    const aliases = {
+      "nintendo entertainment system": "NES",
+
+      nes: "NES",
+
+      "super nintendo entertainment system": "SNES",
+
+      "super nintendo": "SNES",
+
+      snes: "SNES",
+
+      "nintendo 64": "N64",
+
+      n64: "N64",
+
+      "game boy": "GAME BOY",
+
+      "game boy color": "GBC",
+
+      "game boy advance": "GBA",
+
+      "sega genesis": "GENESIS",
+
+      genesis: "GENESIS",
+
+      "sega mega drive": "GENESIS",
+
+      "mega drive": "GENESIS",
+
+      "sega master system": "MASTER SYSTEM",
+
+      "sega saturn": "SATURN",
+
+      saturn: "SATURN",
+
+      "sega dreamcast": "DREAMCAST",
+
+      dreamcast: "DREAMCAST",
+
+      "sony playstation": "PS1",
+
+      playstation: "PS1",
+
+      "playstation 1": "PS1",
+
+      ps1: "PS1",
+
+      psx: "PS1",
+
+      "turbografx-16": "TG16",
+
+      "turbografx 16": "TG16",
+
+      "pc engine": "TG16",
+
+      "neo geo": "NEO GEO",
+
+      msx: "MSX",
+    };
+
+    return aliases[key] || raw.toUpperCase();
+  }
+
   function normalizeHeader(value) {
     return String(value || "")
       .replace(/^\uFEFF/, "")
@@ -1111,9 +1179,7 @@ function renderAdminBulkImport(games) {
     rows.slice(1).forEach((row, index) => {
       const gameName = String(row[gameNameIndex] || "").trim();
 
-      const platform = String(row[platformIndex] || "")
-        .trim()
-        .toUpperCase();
+      const platform = normalizePlatformName(row[platformIndex]);
 
       if (!gameName || !platform) {
         errors.push(`Row ${index + 2}: missing game name or platform`);
