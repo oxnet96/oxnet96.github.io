@@ -783,6 +783,358 @@ function renderAdminAddGameForm(games) {
     });
 }
 
+function renderAdminEditGameForm(games, game) {
+  const container = document.getElementById("adminGameLibrary");
+
+  if (!container) {
+    return;
+  }
+
+  const platforms = Array.from(
+    new Set(
+      games.map((item) =>
+        String(item.platform || "")
+          .trim()
+          .toUpperCase(),
+      ),
+    ),
+  )
+    .filter(Boolean)
+    .sort();
+
+  container.innerHTML = `
+
+    <div
+      style="
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+      "
+    >
+      <button
+        class="find-btn"
+        id="adminEditGameCancel"
+      >
+        &lt; CANCEL
+      </button>
+
+      <div
+        class="status-box"
+        style="
+          margin: 0;
+          flex: 1;
+          min-height: 0;
+        "
+      >
+        EDIT GAME //
+        ${escapeHtml(game.library_code)}
+      </div>
+    </div>
+
+
+    <div
+      class="command-card"
+      style="
+        display: grid;
+        gap: 10px;
+      "
+    >
+
+      <label>
+        LIBRARY CODE
+        <br>
+
+        <input
+          class="search"
+          type="text"
+          value="${escapeHtml(game.library_code)}"
+          disabled
+        >
+      </label>
+
+
+      <label>
+        GAME TITLE
+        <br>
+
+        <input
+          id="adminEditGameName"
+          class="search"
+          type="text"
+          maxlength="120"
+          value="${escapeHtml(game.game_name)}"
+        >
+      </label>
+
+
+      <label>
+        PLATFORM
+        <br>
+
+        <input
+          id="adminEditGamePlatform"
+          class="search"
+          type="text"
+          list="adminEditPlatformList"
+          maxlength="20"
+          value="${escapeHtml(game.platform)}"
+        >
+
+        <datalist
+          id="adminEditPlatformList"
+        >
+          ${platforms
+            .map(
+              (platform) => `
+                <option
+                  value="${escapeHtml(platform)}"
+                ></option>
+              `,
+            )
+            .join("")}
+        </datalist>
+      </label>
+
+
+      <label>
+        REQUEST TYPE
+        <br>
+
+        <select
+          id="adminEditGameType"
+          class="search"
+        >
+          <option
+            value="schmeckles"
+            ${game.request_type === "schmeckles" ? "selected" : ""}
+          >
+            SCHMECKLES
+          </option>
+
+          <option
+            value="donation"
+            ${game.request_type === "donation" ? "selected" : ""}
+          >
+            DONATION ONLY
+          </option>
+
+          <option
+            value="community"
+            ${game.request_type === "community" ? "selected" : ""}
+          >
+            COMMUNITY CHALLENGE
+          </option>
+
+          <option
+            value="disabled"
+            ${game.request_type === "disabled" ? "selected" : ""}
+          >
+            DISABLED
+          </option>
+        </select>
+      </label>
+
+
+      <label>
+        SCHMECKLE COST
+        <br>
+
+        <input
+          id="adminEditGameCost"
+          class="search"
+          type="number"
+          min="0"
+          step="1"
+          value="${Number(game.schmeckle_cost || 0)}"
+        >
+      </label>
+
+
+      <label>
+        <input
+          id="adminEditGameOwned"
+          type="checkbox"
+          ${game.owned ? "checked" : ""}
+        >
+
+        OWNED
+      </label>
+
+
+      <label>
+        <input
+          id="adminEditGameEnabled"
+          type="checkbox"
+          ${game.enabled ? "checked" : ""}
+        >
+
+        ENABLED
+      </label>
+
+
+      <label>
+        NOTES
+        <br>
+
+        <textarea
+          id="adminEditGameNotes"
+          class="search"
+          rows="4"
+          maxlength="1000"
+          placeholder="Optional admin notes..."
+        >${escapeHtml(game.notes || "")}</textarea>
+      </label>
+
+
+      ${
+        game.completed_at
+          ? `
+            <div
+              class="status-box"
+              style="
+                margin: 0;
+                min-height: 0;
+              "
+            >
+              STATUS: COMPLETED
+              <br>
+              COMPLETED:
+              ${escapeHtml(game.completed_at)}
+            </div>
+          `
+          : ""
+      }
+
+
+      <button
+        class="find-btn"
+        id="adminEditGameSave"
+        style="
+          min-height: 44px;
+        "
+      >
+        SAVE CHANGES
+      </button>
+
+
+      <div
+        id="adminEditGameStatus"
+      ></div>
+
+    </div>
+  `;
+
+  /*
+    ================================================
+    CANCEL
+    ================================================
+  */
+
+  document
+    .getElementById("adminEditGameCancel")
+    .addEventListener("click", () => {
+      renderAdminPlatformLibrary(games, String(game.platform).toUpperCase());
+    });
+
+  /*
+    ================================================
+    SAVE
+    ================================================
+  */
+
+  document
+    .getElementById("adminEditGameSave")
+    .addEventListener("click", async () => {
+      const status = document.getElementById("adminEditGameStatus");
+
+      const gameName = document
+        .getElementById("adminEditGameName")
+        .value.trim();
+
+      const platform = document
+        .getElementById("adminEditGamePlatform")
+        .value.trim()
+        .toUpperCase();
+
+      const requestType = document.getElementById("adminEditGameType").value;
+
+      const schmeckleCost = Number(
+        document.getElementById("adminEditGameCost").value,
+      );
+
+      const owned = document.getElementById("adminEditGameOwned").checked;
+
+      const enabled = document.getElementById("adminEditGameEnabled").checked;
+
+      const notes = document.getElementById("adminEditGameNotes").value.trim();
+
+      if (!gameName || !platform) {
+        status.innerHTML = `
+            <div class="empty">
+              *** TITLE AND PLATFORM REQUIRED.
+            </div>
+          `;
+
+        return;
+      }
+
+      if (!Number.isInteger(schmeckleCost) || schmeckleCost < 0) {
+        status.innerHTML = `
+            <div class="empty">
+              *** INVALID SCHMECKLE COST.
+            </div>
+          `;
+
+        return;
+      }
+
+      status.textContent = "UPDATING OXNET DATABASE...";
+
+      try {
+        const response = await adminFetch("/admin/library/update", {
+          method: "POST",
+
+          body: JSON.stringify({
+            library_code: game.library_code,
+
+            game_name: gameName,
+
+            platform,
+
+            owned,
+
+            enabled,
+
+            request_type: requestType,
+
+            schmeckle_cost: schmeckleCost,
+
+            notes,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || `HTTP ${response.status}`);
+        }
+
+        window.alert(`${data.game.library_code} updated.`);
+
+        await loadAdminLibrary();
+      } catch (error) {
+        console.error("Admin edit game failed.", error);
+
+        status.innerHTML = `
+            <div class="empty">
+              *** ${escapeHtml(error.message)}
+            </div>
+          `;
+      }
+    });
+}
+
 function renderAdminPlatformLibrary(games, platform) {
   const container = document.getElementById("adminGameLibrary");
 
@@ -971,6 +1323,22 @@ function renderAdminPlatformLibrary(games, platform) {
                 ${escapeHtml(game.library_code)}
               </div>
 
+              <div
+  style="
+    margin-top: 8px;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  "
+>
+  <button
+    class="find-btn"
+    data-library-edit="${escapeHtml(game.library_code)}"
+  >
+    EDIT GAME
+  </button>
+</div>
+
             </div>
           `;
       })
@@ -978,6 +1346,24 @@ function renderAdminPlatformLibrary(games, platform) {
   }
 
   renderResults();
+
+  list.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-library-edit]");
+
+    if (!button) {
+      return;
+    }
+
+    const libraryCode = button.dataset.libraryEdit;
+
+    const game = games.find((item) => item.library_code === libraryCode);
+
+    if (!game) {
+      return;
+    }
+
+    renderAdminEditGameForm(games, game);
+  });
 
   /*
     ================================================
