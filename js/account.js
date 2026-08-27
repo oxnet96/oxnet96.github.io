@@ -31,6 +31,12 @@ function setLoggedOutState(message = "NOT CONNECTED") {
     window.location.href =
       `${API_URL}/auth/twitch`;
   };
+
+  const authSafetyNotice = document.getElementById("authSafetyNotice");
+
+  if (authSafetyNotice) {
+    authSafetyNotice.hidden = false;
+  }
 }
 
 function setLoggedInState(data) {
@@ -63,6 +69,12 @@ function setLoggedInState(data) {
 
     window.location.reload();
   };
+
+  const authSafetyNotice = document.getElementById("authSafetyNotice");
+
+  if (authSafetyNotice) {
+    authSafetyNotice.hidden = true;
+  }
 }
 
 function updateOnlineStatus(data) {
