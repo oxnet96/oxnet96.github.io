@@ -2,6 +2,7 @@ import { API_URL } from './config.js'
 import { escapeHtml } from './commands.js'
 
 const PLATFORM_LOGO_BASE = 'assets/console-logos'
+const PLATFORM_ASSET_VERSION = '20260827-1'
 
 /*
   OXNET platform-logo map.
@@ -25,6 +26,7 @@ const PLATFORM_LOGO_FILES = {
   NINTENDO64: 'nintendo-64.png',
 
   // Nintendo handhelds
+  GB: 'game-boy.png',
   GAMEBOY: 'game-boy.png',
   NINTENDOGAMEBOY: 'game-boy.png',
 
@@ -97,7 +99,7 @@ function getPlatformLogo (platform) {
   const mappedFile = PLATFORM_LOGO_FILES[key]
 
   if (mappedFile) {
-    return `${PLATFORM_LOGO_BASE}/${mappedFile}`
+    return `${PLATFORM_LOGO_BASE}/${mappedFile}?v=${PLATFORM_ASSET_VERSION}`
   }
 
   /*
@@ -112,7 +114,7 @@ function getPlatformLogo (platform) {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
 
-  return `${PLATFORM_LOGO_BASE}/${slug}.png`
+  return `${PLATFORM_LOGO_BASE}/${slug}.png?v=${PLATFORM_ASSET_VERSION}`
 }
 
 function activateLogoFallbacks (container) {

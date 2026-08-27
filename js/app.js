@@ -6,7 +6,7 @@ import { loadRedemptions } from './redemptions.js'
 
 import { loadGameQueue } from './gamequeue.js'
 
-import { loadGameLibrary, loadCompletedGames } from './gamelibrary.js'
+import { loadGameLibrary, loadCompletedGames } from './gamelibrary.js?v=20260827-1'
 
 function hideSpecialViews () {
   const gameQueuePanel = document.getElementById('gameQueuePanel')
