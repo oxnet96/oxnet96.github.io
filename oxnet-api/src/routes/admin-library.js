@@ -458,15 +458,15 @@ export async function handleAdminLibraryRoutes(context) {
 
       function generateLibraryCode() {
         /*
-        G1000 through G9999
+        G10000 through G99999
       */
 
-        if (usedCodes.size >= 9000) {
+        if (usedCodes.size >= 90000) {
           throw new Error("Game library code space exhausted");
         }
 
         for (let attempt = 0; attempt < 20000; attempt++) {
-          const number = 1000 + Math.floor(Math.random() * 9000);
+          const number = 10000 + Math.floor(Math.random() * 90000);
 
           const code = `G${number}`;
 
@@ -801,3 +801,4 @@ export async function handleAdminLibraryRoutes(context) {
     headers,
   );
 }
+

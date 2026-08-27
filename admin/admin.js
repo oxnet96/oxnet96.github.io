@@ -1250,9 +1250,9 @@ function renderAdminBulkImport(games) {
         throw new Error("No valid games found.");
       }
 
-      if (parsedGames.length > 9000) {
+      if (parsedGames.length > 90000) {
         throw new Error(
-          "OXNET currently supports a maximum of 9,000 G#### library codes.",
+          "OXNET currently supports a maximum of 90,000 G##### library codes.",
         );
       }
 
@@ -2206,3 +2206,4 @@ function startAdmin() {
 }
 
 startAdmin();
+
