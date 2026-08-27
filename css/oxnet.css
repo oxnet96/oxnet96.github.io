@@ -609,3 +609,21 @@
     font-size: 18px;
   }
 }
+
+/* ==================================================
+   OXNET — READABLE MOBILE DISPLAY FONT
+   ================================================== */
+
+@media (max-width: 520px) {
+  .banner h1,
+  .command-name {
+    font-family:
+      Impact,
+      "Arial Black",
+      "Helvetica Neue",
+      Arial,
+      sans-serif;
+
+    letter-spacing: 0.5px;
+  }
+}
