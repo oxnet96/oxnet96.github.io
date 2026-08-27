@@ -1,415 +1,245 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
+  <head>
+    <meta charset="UTF-8" />
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>
-    OXNET 96 // Administration
-  </title>
+    <title>OXNET 96 // Administration</title>
 
-  <link
-    rel="stylesheet"
-    href="../css/oxnet.css"
-  />
-</head>
+    <link rel="stylesheet" href="../css/oxnet.css" />
+  </head>
 
-<body>
-  <div id="noise"></div>
+  <body>
+    <div id="noise"></div>
 
-  <div class="page">
+    <div class="page">
+      <div class="banner">
+        <h1>OXNET 96</h1>
 
-    <div class="banner">
-      <h1>OXNET 96</h1>
-
-      <p>
-        SYSTEM ADMINISTRATION //
-        AUTHORIZED IDIOTS ONLY
-      </p>
-    </div>
-
-
-    <div class="win95-window">
-
-      <div class="titlebar">
-
-        <div class="titlebar-left">
-
-          <div class="titlebar-icon">
-            OX
-          </div>
-
-          <div>
-            OXNET 96 //
-            ADMINISTRATION
-          </div>
-
-        </div>
-
-        <div class="titlebar-buttons">
-          <div class="win-btn">_</div>
-          <div class="win-btn">□</div>
-          <div class="win-btn">×</div>
-        </div>
-
+        <p>SYSTEM ADMINISTRATION // AUTHORIZED IDIOTS ONLY</p>
       </div>
 
+      <div class="win95-window">
+        <div class="titlebar">
+          <div class="titlebar-left">
+            <div class="titlebar-icon">OX</div>
 
-      <div class="content">
+            <div>OXNET 96 // ADMINISTRATION</div>
+          </div>
 
-        <!--
+          <div class="titlebar-buttons">
+            <div class="win-btn">_</div>
+            <div class="win-btn">□</div>
+            <div class="win-btn">×</div>
+          </div>
+        </div>
+
+        <div class="content">
+          <!--
           ==========================================
           ADMIN AUTH STATUS
           ==========================================
         -->
 
-        <div
-          class="panel"
-          id="adminAuthPanel"
-        >
-
-          <div class="panel-header">
-            SECURITY CLEARANCE
-          </div>
-
-          <div
-            style="
-              padding: 12px;
-              font-family: 'Courier New', monospace;
-            "
-          >
+          <div class="panel" id="adminAuthPanel">
+            <div class="panel-header">SECURITY CLEARANCE</div>
 
             <div
-              id="adminAuthStatus"
-              class="status-box"
-              style="margin-top: 0;"
+              style="
+                padding: 12px;
+                font-family: &quot;Courier New&quot;, monospace;
+              "
             >
-              VERIFYING OXNET CREDENTIALS...
+              <div
+                id="adminAuthStatus"
+                class="status-box"
+                style="margin-top: 0"
+              >
+                VERIFYING OXNET CREDENTIALS...
+              </div>
             </div>
-
           </div>
 
-        </div>
-
-
-        <!--
+          <!--
           ==========================================
           ACCESS DENIED
           ==========================================
         -->
 
-        <div
-          class="panel"
-          id="adminDeniedPanel"
-          hidden
-        >
+          <div class="panel" id="adminDeniedPanel" hidden>
+            <div class="panel-header">ACCESS DENIED</div>
 
-          <div class="panel-header">
-            ACCESS DENIED
-          </div>
-
-          <div
-            style="
-              padding: 18px;
-              font-family: 'Courier New', monospace;
-            "
-          >
-            *** YOU ARE NOT AUTHORIZED
-            TO OPERATE THIS EQUIPMENT.
-            <br><br>
-
-            PLEASE RETURN TO WHATEVER
-            YOU WERE DOING BEFORE
-            YOU FOUND THIS PAGE.
-            <br><br>
-
-            <button
-              class="find-btn"
-              id="adminLoginBtn"
+            <div
+              style="
+                padding: 18px;
+                font-family: &quot;Courier New&quot;, monospace;
+              "
             >
-              LOGIN WITH TWITCH
-            </button>
+              *** YOU ARE NOT AUTHORIZED TO OPERATE THIS EQUIPMENT.
+              <br /><br />
 
+              PLEASE RETURN TO WHATEVER YOU WERE DOING BEFORE YOU FOUND THIS
+              PAGE.
+              <br /><br />
+
+              <button class="find-btn" id="adminLoginBtn">
+                LOGIN WITH TWITCH
+              </button>
+            </div>
           </div>
 
-        </div>
-
-
-        <!--
+          <!--
           ==========================================
           ADMIN CONTROL PANEL
           ==========================================
         -->
 
-        <div
-          id="adminControlPanel"
-          hidden
-        >
+          <div id="adminControlPanel" hidden>
+            <div
+              style="
+                display: grid;
+                grid-template-columns: 220px 1fr;
+                gap: 10px;
+                margin-top: 10px;
+              "
+            >
+              <!-- ADMIN NAV -->
 
-          <div
-            style="
-              display: grid;
-              grid-template-columns: 220px 1fr;
-              gap: 10px;
-              margin-top: 10px;
-            "
-          >
+              <div class="panel">
+                <div class="panel-header">CONTROL PANEL</div>
 
-            <!-- ADMIN NAV -->
+                <div class="sidebar">
+                  <button class="nav-btn active" data-admin-view="dashboard">
+                    DASHBOARD
+                  </button>
 
-            <div class="panel">
+                  <button class="nav-btn" data-admin-view="games">
+                    GAME QUEUE
+                  </button>
 
-              <div class="panel-header">
-                CONTROL PANEL
+                  <button class="nav-btn" data-admin-view="library">
+                    GAME LIBRARY
+                  </button>
+
+                  <button class="nav-btn" data-admin-view="redemptions">
+                    REDEMPTIONS
+                  </button>
+
+                  <button class="nav-btn" data-admin-view="commands">
+                    COMMANDS
+                  </button>
+
+                  <button class="nav-btn" data-admin-view="sfx">SFX</button>
+
+                  <button class="nav-btn" data-admin-view="submissions">
+                    SUBMISSIONS
+                  </button>
+
+                  <hr />
+
+                  <button class="nav-btn" id="adminLogoutBtn">LOG OUT</button>
+
+                  <button class="nav-btn" id="returnToPortalBtn">
+                    VIEW PUBLIC PORTAL
+                  </button>
+                </div>
               </div>
 
-              <div class="sidebar">
+              <!-- ADMIN MAIN AREA -->
 
-                <button
-                  class="nav-btn active"
-                  data-admin-view="dashboard"
-                >
-                  DASHBOARD
-                </button>
+              <div class="main">
+                <!-- DASHBOARD -->
 
-                <button
-                  class="nav-btn"
-                  data-admin-view="games"
-                >
-                  GAME QUEUE
-                </button>
+                <div class="panel admin-view" id="adminViewDashboard">
+                  <div class="panel-header">OXNET CONTROL CENTER</div>
 
-                <button
-                  class="nav-btn"
-                  data-admin-view="redemptions"
-                >
-                  REDEMPTIONS
-                </button>
+                  <div style="padding: 12px">
+                    <div class="status-box" style="margin-top: 0">
+                      ADMINISTRATOR:
+                      <span id="adminUser"> UNKNOWN </span>
+                      <br />
 
-                <button
-                  class="nav-btn"
-                  data-admin-view="commands"
-                >
-                  COMMANDS
-                </button>
+                      API:
+                      <span id="adminApiStatus"> CONNECTING </span>
+                      <br />
 
-                <button
-                  class="nav-btn"
-                  data-admin-view="sfx"
-                >
-                  SFX
-                </button>
+                      GAME QUEUE:
+                      <span id="adminGameCount"> --- </span>
+                      <br />
 
-                <button
-                  class="nav-btn"
-                  data-admin-view="submissions"
-                >
-                  SUBMISSIONS
-                </button>
-
-                <hr>
-
-                <button
-                  class="nav-btn"
-                  id="adminLogoutBtn"
-                >
-                  LOG OUT
-                </button>
-
-                <button
-                  class="nav-btn"
-                  id="returnToPortalBtn"
-                >
-                  VIEW PUBLIC PORTAL
-                </button>
-
-              </div>
-
-            </div>
-
-
-            <!-- ADMIN MAIN AREA -->
-
-            <div class="main">
-
-              <!-- DASHBOARD -->
-
-              <div
-                class="panel admin-view"
-                id="adminViewDashboard"
-              >
-
-                <div class="panel-header">
-                  OXNET CONTROL CENTER
+                      PENDING SUBMISSIONS:
+                      <span id="adminSubmissionCount"> --- </span>
+                    </div>
+                  </div>
                 </div>
 
-                <div
-                  style="padding: 12px;"
-                >
+                <!-- GAME QUEUE -->
 
-                  <div
-                    class="status-box"
-                    style="margin-top: 0;"
-                  >
-                    ADMINISTRATOR:
-                    <span id="adminUser">
-                      UNKNOWN
-                    </span>
-                    <br>
-
-                    API:
-                    <span id="adminApiStatus">
-                      CONNECTING
-                    </span>
-                    <br>
-
-                    GAME QUEUE:
-                    <span id="adminGameCount">
-                      ---
-                    </span>
-                    <br>
-
-                    PENDING SUBMISSIONS:
-                    <span id="adminSubmissionCount">
-                      ---
-                    </span>
+                <div class="panel admin-view" id="adminViewGames" hidden>
+                  <div class="panel-header">
+                    PROGRAMMING // GAME QUEUE MANAGEMENT
                   </div>
 
+                  <div id="adminGameQueue" style="padding: 12px">
+                    LOADING GAME REQUESTS...
+                  </div>
                 </div>
 
+                <!-- GAME LIBRARY -->
+
+                <div class="panel admin-view" id="adminViewLibrary" hidden>
+                  <div class="panel-header">PROGRAMMING // GAME LIBRARY</div>
+
+                  <div id="adminGameLibrary" style="padding: 12px">
+                    LOADING GAME LIBRARY...
+                  </div>
+                </div>
+
+                <!-- REDEMPTIONS -->
+
+                <div class="panel admin-view" id="adminViewRedemptions" hidden>
+                  <div class="panel-header">REDEMPTION DATABASE</div>
+
+                  <div style="padding: 12px">
+                    REDEMPTION MANAGEMENT COMING NEXT.
+                  </div>
+                </div>
+
+                <!-- COMMANDS -->
+
+                <div class="panel admin-view" id="adminViewCommands" hidden>
+                  <div class="panel-header">COMMAND DATABASE</div>
+
+                  <div style="padding: 12px">
+                    COMMAND MANAGEMENT COMING NEXT.
+                  </div>
+                </div>
+
+                <!-- SFX -->
+
+                <div class="panel admin-view" id="adminViewSfx" hidden>
+                  <div class="panel-header">SOUND EFFECT DATABASE</div>
+
+                  <div style="padding: 12px">SFX MANAGEMENT COMING NEXT.</div>
+                </div>
+
+                <!-- SUBMISSIONS -->
+
+                <div class="panel admin-view" id="adminViewSubmissions" hidden>
+                  <div class="panel-header">VIEWER SUBMISSIONS</div>
+
+                  <div style="padding: 12px">
+                    SUBMISSION REVIEW COMING NEXT.
+                  </div>
+                </div>
               </div>
-
-
-              <!-- GAME QUEUE -->
-
-              <div
-                class="panel admin-view"
-                id="adminViewGames"
-                hidden
-              >
-
-                <div class="panel-header">
-                  PROGRAMMING //
-                  GAME QUEUE MANAGEMENT
-                </div>
-
-                <div
-                  id="adminGameQueue"
-                  style="padding: 12px;"
-                >
-                  LOADING GAME REQUESTS...
-                </div>
-
-              </div>
-
-
-              <!-- REDEMPTIONS -->
-
-              <div
-                class="panel admin-view"
-                id="adminViewRedemptions"
-                hidden
-              >
-
-                <div class="panel-header">
-                  REDEMPTION DATABASE
-                </div>
-
-                <div
-                  style="padding: 12px;"
-                >
-                  REDEMPTION MANAGEMENT
-                  COMING NEXT.
-                </div>
-
-              </div>
-
-
-              <!-- COMMANDS -->
-
-              <div
-                class="panel admin-view"
-                id="adminViewCommands"
-                hidden
-              >
-
-                <div class="panel-header">
-                  COMMAND DATABASE
-                </div>
-
-                <div
-                  style="padding: 12px;"
-                >
-                  COMMAND MANAGEMENT
-                  COMING NEXT.
-                </div>
-
-              </div>
-
-
-              <!-- SFX -->
-
-              <div
-                class="panel admin-view"
-                id="adminViewSfx"
-                hidden
-              >
-
-                <div class="panel-header">
-                  SOUND EFFECT DATABASE
-                </div>
-
-                <div
-                  style="padding: 12px;"
-                >
-                  SFX MANAGEMENT
-                  COMING NEXT.
-                </div>
-
-              </div>
-
-
-              <!-- SUBMISSIONS -->
-
-              <div
-                class="panel admin-view"
-                id="adminViewSubmissions"
-                hidden
-              >
-
-                <div class="panel-header">
-                  VIEWER SUBMISSIONS
-                </div>
-
-                <div
-                  style="padding: 12px;"
-                >
-                  SUBMISSION REVIEW
-                  COMING NEXT.
-                </div>
-
-              </div>
-
             </div>
-
           </div>
-
         </div>
-
       </div>
-
     </div>
 
-  </div>
-
-  <script
-    type="module"
-    src="./admin.js"
-  ></script>
-
-</body>
+    <script type="module" src="./admin.js"></script>
+  </body>
 </html>

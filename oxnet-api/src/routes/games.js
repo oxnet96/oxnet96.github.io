@@ -512,17 +512,18 @@ if (url.pathname === '/bridge/game-lookup') {
   }
 
   try {
-    const body = await request.json()
+    const body = await request.json();
 
-    const twitchUserId = String(body.twitch_user_id || '').trim()
+    const twitchUserId = String(body.twitch_user_id || "").trim();
 
-    const twitchLogin = String(body.twitch_login || '').trim()
+    const twitchLogin = String(body.twitch_login || "").trim();
 
     const twitchDisplayName = String(
-      body.twitch_display_name || twitchLogin
-    ).trim()
+      body.twitch_display_name || twitchLogin,
+    ).trim();
 
-    const libraryId = Number(body.library_id)
+    const libraryId = Number(body.library_id);
+    const expectedCost = Number(body.expected_cost);
 
     /*
     Required identity fields.
@@ -531,21 +532,31 @@ if (url.pathname === '/bridge/game-lookup') {
     if (!twitchUserId || !twitchLogin) {
       return jsonResponse(
         {
-          error: 'Missing Twitch user fields'
+          error: "Missing Twitch user fields",
         },
         400,
-        headers
-      )
+        headers,
+      );
     }
 
     if (!Number.isInteger(libraryId) || libraryId <= 0) {
       return jsonResponse(
         {
-          error: 'Valid library ID is required'
+          error: "Valid library ID is required",
         },
         400,
-        headers
-      )
+        headers,
+      );
+    }
+
+    if (!Number.isInteger(expectedCost) || expectedCost < 0) {
+      return jsonResponse(
+        {
+          error: "Valid expected cost is required",
+        },
+        400,
+        headers,
+      );
     }
 
     /*
@@ -569,19 +580,44 @@ if (url.pathname === '/bridge/game-lookup') {
       from game_library
       where id = ${libraryId}
       limit 1
-    `
+    `;
 
     if (!libraryRows.length) {
       return jsonResponse(
         {
-          error: 'Game is not in the approved library'
+          error: "Game is not in the approved library",
         },
         404,
-        headers
-      )
+        headers,
+      );
     }
 
-    const game = libraryRows[0]
+    const game = libraryRows[0];
+
+    /*
+  Make sure the price Streamer.bot
+  checked is still the current price.
+*/
+
+    const currentCost = Number(game.schmeckle_cost);
+
+    if (currentCost !== expectedCost) {
+      return jsonResponse(
+        {
+          error: "Game price changed. Please try again.",
+
+          game_name: game.game_name,
+
+          platform: game.platform,
+
+          expected_cost: expectedCost,
+
+          current_cost: currentCost,
+        },
+        409,
+        headers,
+      );
+    }
 
     /*
     Confirm the game is still eligible
@@ -592,51 +628,51 @@ if (url.pathname === '/bridge/game-lookup') {
     if (!game.owned) {
       return jsonResponse(
         {
-          error: 'Game is not currently owned',
+          error: "Game is not currently owned",
           game_name: game.game_name,
-          platform: game.platform
+          platform: game.platform,
         },
         409,
-        headers
-      )
+        headers,
+      );
     }
 
     if (!game.enabled) {
       return jsonResponse(
         {
-          error: 'Game is currently disabled',
+          error: "Game is currently disabled",
           game_name: game.game_name,
-          platform: game.platform
+          platform: game.platform,
         },
         409,
-        headers
-      )
+        headers,
+      );
     }
 
     if (game.completed_at) {
       return jsonResponse(
         {
-          error: 'Game has already been completed',
+          error: "Game has already been completed",
           game_name: game.game_name,
           platform: game.platform,
-          completed_at: game.completed_at
+          completed_at: game.completed_at,
         },
         409,
-        headers
-      )
+        headers,
+      );
     }
 
-    if (game.request_type !== 'schmeckles') {
+    if (game.request_type !== "schmeckles") {
       return jsonResponse(
         {
-          error: 'Game is not available for normal Schmeckle requests',
+          error: "Game is not available for normal Schmeckle requests",
           game_name: game.game_name,
           platform: game.platform,
-          request_type: game.request_type
+          request_type: game.request_type,
         },
         409,
-        headers
-      )
+        headers,
+      );
     }
 
     /*
@@ -660,12 +696,12 @@ if (url.pathname === '/bridge/game-lookup') {
         )
       order by requested_at asc
       limit 1
-    `
+    `;
 
     if (userActiveRequest.length > 0) {
       return jsonResponse(
         {
-          error: 'User already has an active game request',
+          error: "User already has an active game request",
 
           request_id: userActiveRequest[0].request_code
             ? Number(userActiveRequest[0].request_code)
@@ -675,11 +711,11 @@ if (url.pathname === '/bridge/game-lookup') {
 
           platform: userActiveRequest[0].platform,
 
-          status: userActiveRequest[0].status
+          status: userActiveRequest[0].status,
         },
         409,
-        headers
-      )
+        headers,
+      );
     }
 
     /*
@@ -702,12 +738,12 @@ if (url.pathname === '/bridge/game-lookup') {
           'playing'
         )
       limit 1
-    `
+    `;
 
     if (existing.length > 0) {
       return jsonResponse(
         {
-          error: 'Game is already in the queue',
+          error: "Game is already in the queue",
 
           request_id: existing[0].request_code
             ? Number(existing[0].request_code)
@@ -715,11 +751,11 @@ if (url.pathname === '/bridge/game-lookup') {
 
           game_name: existing[0].game_name,
 
-          platform: existing[0].platform
+          platform: existing[0].platform,
         },
         409,
-        headers
-      )
+        headers,
+      );
     }
 
     /*
@@ -748,7 +784,7 @@ if (url.pathname === '/bridge/game-lookup') {
         ${libraryId},
         ${game.game_name},
         ${game.platform},
-        ${Number(game.schmeckle_cost)},
+        ${currentCost},
         0,
         'queued'
       )
@@ -760,7 +796,7 @@ if (url.pathname === '/bridge/game-lookup') {
         platform,
         cost_paid,
         requested_at
-    `
+    `;
 
     return jsonResponse(
       {
@@ -778,11 +814,11 @@ if (url.pathname === '/bridge/game-lookup') {
 
         cost_paid: Number(rows[0].cost_paid),
 
-        requested_at: rows[0].requested_at
+        requested_at: rows[0].requested_at,
       },
       201,
-      headers
-    )
+      headers,
+    );
   } catch (error) {
     /*
     Database uniqueness protection
