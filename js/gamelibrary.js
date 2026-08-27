@@ -3,116 +3,81 @@ import { escapeHtml } from './commands.js'
 
 const PLATFORM_LOGO_BASE = 'assets/console-logos'
 
-const PLATFORM_LOGO_ALIASES = {
+/*
+  OXNET platform-logo map.
+
+  Keys are normalized to uppercase letters/numbers only, so database values
+  such as "Game Boy Advance", "GAMEBOY ADVANCE", "GBA", etc. can all point
+  to the same stable logo filename.
+
+  The actual PNG files in assets/console-logos use lowercase canonical names.
+*/
+const PLATFORM_LOGO_FILES = {
+  // Nintendo home consoles
   NES: 'nes.png',
-  'NINTENDO ENTERTAINMENT SYSTEM': 'nes.png',
+  NINTENDOENTERTAINMENTSYSTEM: 'nes.png',
 
-  SNES: 'super-nintendo.png',
-  'SUPER NINTENDO': 'super-nintendo.png',
-  'SUPER NINTENDO ENTERTAINMENT SYSTEM': 'super-nintendo.png',
-  'SUPER FAMICOM': 'super-famicom.png',
-  FAMICOM: 'family-computer.png',
-
-  GENESIS: 'genesis.png',
-  'SEGA GENESIS': 'genesis.png',
-  'MEGA DRIVE': 'mega-drive.png',
-  'SEGA MEGA DRIVE': 'mega-drive.png',
-  '32X': 'genesis-32x.png',
-  'SEGA 32X': 'genesis-32x.png',
-  'GENESIS 32X': 'genesis-32x.png',
-  'MASTER SYSTEM': 'sega-master-system.png',
-  'SEGA MASTER SYSTEM': 'sega-master-system.png',
-  'MARK III': 'mark-iii.png',
-  'SG-1000': 'sg-1000.png',
-  'SEGA CD': 'sega-cd.png',
-  'MEGA CD': 'mega-cd.png',
-  'MEGA CD II': 'mega-cd-ii.png',
-  SATURN: 'sega-saturn.png',
-  'SEGA SATURN': 'sega-saturn.png',
-  DREAMCAST: 'dreamcast.png',
-  'SEGA DREAMCAST': 'dreamcast.png',
+  SNES: 'snes.png',
+  SUPERNINTENDO: 'snes.png',
+  SUPERNINTENDOENTERTAINMENTSYSTEM: 'snes.png',
 
   N64: 'nintendo-64.png',
-  'NINTENDO 64': 'nintendo-64.png',
-  'NINTENDO 64DD': 'nintendo-64-dd.png',
-  'NINTENDO 64 DD': 'nintendo-64-dd.png',
-  GAMECUBE: 'gamecube.png',
-  'NINTENDO GAMECUBE': 'gamecube.png',
-  WII: 'wii.png',
-  'WII U': 'wii-u.png',
-  SWITCH: 'switch.png',
-  'NINTENDO SWITCH': 'switch.png',
+  NINTENDO64: 'nintendo-64.png',
 
-  'GAME GEAR': 'game-gear.png',
-  'SEGA GAME GEAR': 'game-gear.png',
-  'GAME BOY': 'game-boy.png',
+  // Nintendo handhelds
   GAMEBOY: 'game-boy.png',
-  'GAME BOY COLOR': 'game-boy-color.png',
-  'GAMEBOY COLOR': 'game-boy-color.png',
-  'GAME BOY ADVANCE': 'game-boy-advance.png',
-  'GAMEBOY ADVANCE': 'game-boy-advance.png',
-  GBA: 'game-boy-advance.png',
-  'NINTENDO DS': 'nintendo-ds.png',
-  NDS: 'nintendo-ds.png',
-  'ATARI LYNX': 'atari-lynx.png',
-  LYNX: 'atari-lynx.png',
+  NINTENDOGAMEBOY: 'game-boy.png',
 
+  GBC: 'game-boy-color.png',
+  GAMEBOYCOLOR: 'game-boy-color.png',
+  NINTENDOGAMEBOYCOLOR: 'game-boy-color.png',
+
+  GBA: 'game-boy-advance.png',
+  GAMEBOYADVANCE: 'game-boy-advance.png',
+  NINTENDOGAMEBOYADVANCE: 'game-boy-advance.png',
+
+  NDS: 'nintendo-ds.png',
+  DS: 'nintendo-ds.png',
+  NINTENDODS: 'nintendo-ds.png',
+
+  // Sega
+  GENESIS: 'genesis.png',
+  SEGAGENESIS: 'genesis.png',
+  MEGADRIVE: 'genesis.png',
+  SEGAMEGADRIVE: 'genesis.png',
+
+  '32X': 'sega-32x.png',
+  SEGA32X: 'sega-32x.png',
+  GENESIS32X: 'sega-32x.png',
+
+  GAMEGEAR: 'game-gear.png',
+  SEGAGAMEGEAR: 'game-gear.png',
+
+  MASTERSYSTEM: 'master-system.png',
+  SEGAMASTERSYSTEM: 'master-system.png',
+
+  // Sony
   PS1: 'playstation.png',
   PSX: 'playstation.png',
   PLAYSTATION: 'playstation.png',
-  'PLAYSTATION 1': 'playstation.png',
-  PS2: 'ps-2.png',
-  'PLAYSTATION 2': 'ps-2.png',
-  PS3: 'ps3.png',
-  'PLAYSTATION 3': 'ps3.png',
-  PS4: 'ps4.png',
-  'PLAYSTATION 4': 'ps4.png',
+  PLAYSTATION1: 'playstation.png',
+  SONYPLAYSTATION: 'playstation.png',
 
-  XBOX: 'xbox.png',
-  'XBOX 360': 'xbox-360.png',
-  'XBOX ONE': 'xbox-one.png',
+  // Atari
+  ATARI2600: 'atari-2600.png',
 
-  'ATARI 2600': 'atari-2600.png',
-  'ATARI 5200': 'atari-5200.png',
-  'ATARI 7800': 'atari-7800.png',
-  'ATARI XE': 'atari-xe.png',
-  JAGUAR: 'jaguar.png',
-  'ATARI JAGUAR': 'jaguar.png',
-  'JAGUAR CD': 'jaguar-cd.png',
-  'ATARI JAGUAR CD': 'jaguar-cd.png',
+  JAGUAR: 'atari-jaguar.png',
+  ATARIJAGUAR: 'atari-jaguar.png',
 
-  'NEO GEO': 'neo-geo.png',
-  'NEO-GEO': 'neo-geo.png',
-  'NEO GEO CD': 'neo-geo-cd.png',
-  'NEO-GEO CD': 'neo-geo-cd.png',
+  LYNX: 'atari-lynx.png',
+  ATARILYNX: 'atari-lynx.png',
 
-  '3DO': '3do.png',
-  'CD-I': 'cd-i.png',
-  CDI: 'cd-i.png',
-  'PHILIPS CD-I': 'cd-i.png',
-  'PC ENGINE': 'pc-engine.png',
-  'PC-FX': 'pc-fx.png',
-  'TURBOGRAFX-16': 'turbo-grafx-16.png',
-  'TURBOGRAFX 16': 'turbo-grafx-16.png',
-  'TURBO GRAFX 16': 'turbo-grafx-16.png',
-  'TURBO-GRAFX 16': 'turbo-grafx-16.png',
-  'TURBO GRAFX-16': 'turbo-grafx-16.png',
-  TG16: 'turbo-grafx-16.png',
-  'SUPERGRAFX': 'super-grafx.png',
-  'SUPER GRAFX': 'super-grafx.png',
-  'ODYSSEY2': 'odyssey2.png',
-  'ODYSSEY 2': 'odyssey2.png',
+  // NEC
+  TG16: 'turbografx-16.png',
+  TURBOGRAFX16: 'turbografx-16.png',
+  NECTURBOGRAFX16: 'turbografx-16.png',
 
-  COLECOVISION: 'coleco-vision.png',
-  'COLECO VISION': 'coleco-vision.png',
-  INTELLIVISION: 'intellivision.png',
-  VECTREX: 'vectrex.png',
-  'COMMODORE 64': 'commodore64.png',
-  C64: 'commodore64.png',
-  'AMIGA CD32': 'amiga-cd-32.png',
-  'AMIGA CD 32': 'amiga-cd-32.png',
-
-  // Arcade library
+  // Arcade
   MAME: 'mame.png'
 }
 
@@ -122,14 +87,26 @@ function normalizePlatformName (platform) {
     .toUpperCase()
 }
 
-function getPlatformLogo (platform) {
-  const name = normalizePlatformName(platform)
+function normalizePlatformKey (platform) {
+  return normalizePlatformName(platform)
+    .replace(/[^A-Z0-9]/g, '')
+}
 
-  if (PLATFORM_LOGO_ALIASES[name]) {
-    return `${PLATFORM_LOGO_BASE}/${PLATFORM_LOGO_ALIASES[name]}`
+function getPlatformLogo (platform) {
+  const key = normalizePlatformKey(platform)
+  const mappedFile = PLATFORM_LOGO_FILES[key]
+
+  if (mappedFile) {
+    return `${PLATFORM_LOGO_BASE}/${mappedFile}`
   }
 
-  const slug = name
+  /*
+    Future-proof fallback:
+    if a new platform is added later and its logo is named after the platform
+    in lowercase-kebab-case, OXNET will try it automatically before falling
+    back to text.
+  */
+  const slug = normalizePlatformName(platform)
     .toLowerCase()
     .replace(/&/g, 'and')
     .replace(/[^a-z0-9]+/g, '-')
