@@ -43,6 +43,20 @@ const PLATFORM_LOGO_ALIASES = {
   SWITCH: 'switch.png',
   'NINTENDO SWITCH': 'switch.png',
 
+  'GAME GEAR': 'game-gear.png',
+  'SEGA GAME GEAR': 'game-gear.png',
+  'GAME BOY': 'game-boy.png',
+  GAMEBOY: 'game-boy.png',
+  'GAME BOY COLOR': 'game-boy-color.png',
+  'GAMEBOY COLOR': 'game-boy-color.png',
+  'GAME BOY ADVANCE': 'game-boy-advance.png',
+  'GAMEBOY ADVANCE': 'game-boy-advance.png',
+  GBA: 'game-boy-advance.png',
+  'NINTENDO DS': 'nintendo-ds.png',
+  NDS: 'nintendo-ds.png',
+  'ATARI LYNX': 'atari-lynx.png',
+  LYNX: 'atari-lynx.png',
+
   PS1: 'playstation.png',
   PSX: 'playstation.png',
   PLAYSTATION: 'playstation.png',
@@ -81,6 +95,9 @@ const PLATFORM_LOGO_ALIASES = {
   'TURBOGRAFX-16': 'turbo-grafx-16.png',
   'TURBOGRAFX 16': 'turbo-grafx-16.png',
   'TURBO GRAFX 16': 'turbo-grafx-16.png',
+  'TURBO-GRAFX 16': 'turbo-grafx-16.png',
+  'TURBO GRAFX-16': 'turbo-grafx-16.png',
+  TG16: 'turbo-grafx-16.png',
   'SUPERGRAFX': 'super-grafx.png',
   'SUPER GRAFX': 'super-grafx.png',
   'ODYSSEY2': 'odyssey2.png',
@@ -291,7 +308,7 @@ function renderLibrary (allGames, containerId, mode = 'available') {
                   <img
                     class="console-logo"
                     src="${getPlatformLogo(platform)}"
-                    alt="${escapeHtml(platform)}"
+                    alt=""
                     loading="lazy"
                     style="
                       display: block;
