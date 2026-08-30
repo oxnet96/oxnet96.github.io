@@ -11,7 +11,7 @@ import {
 import {
   loadRedemptions,
   showRedemptionDirectory
-} from './redemptions.js?v=20260830-150831'
+} from './redemptions.js?v=20260830-151626'
 
 import {
   loadGameQueue
