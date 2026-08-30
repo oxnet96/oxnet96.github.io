@@ -5,7 +5,7 @@ import {
 
 import {
   mergeCommands
-} from './commands.js?v=20260830-134937'
+} from './commands.js?v=20260830-141616'
 
 let jcVideoRedemption = null
 let actionBindingInstalled = false

@@ -39,63 +39,12 @@
 
               <div class="sidebar">
 
-                <div
-                  style="
-                    margin: 2px 0 5px;
-                    padding: 4px 6px;
-                    font-family: 'Courier New', monospace;
-                    font-size: 12px;
-                    font-weight: bold;
-                  "
-                >
-                  COMMANDS
-                </div>
-
                 <button
                   class="nav-btn active"
-                  data-filter="all"
-                  style="
-                    margin-left: 10px;
-                    width: calc(100% - 10px);
-                  "
+                  id="commandsBtn"
                 >
-                  ALL
+                  COMMANDS
                 </button>
-
-                <button
-                  class="nav-btn"
-                  data-filter="utility"
-                  style="
-                    margin-left: 10px;
-                    width: calc(100% - 10px);
-                  "
-                >
-                  UTILITY
-                </button>
-
-                <button
-                  class="nav-btn"
-                  data-filter="redemption"
-                  style="
-                    margin-left: 10px;
-                    width: calc(100% - 10px);
-                  "
-                >
-                  REDEMPTIONS
-                </button>
-
-                <button
-                  class="nav-btn"
-                  data-filter="sfx"
-                  style="
-                    margin-left: 10px;
-                    width: calc(100% - 10px);
-                  "
-                >
-                  SFX
-                </button>
-
-                <div style="height: 8px"></div>
 
                 <button
                   class="nav-btn"
@@ -187,7 +136,7 @@
                 </div>
               </div>
 
-              <div class="panel" id="searchPanel">
+              <div class="panel" id="searchPanel" hidden>
                 <div class="panel-header">SEARCH DATABASE</div>
 
                 <div class="toolbar">
@@ -287,6 +236,6 @@
       </div>
     </div>
 
-    <script type="module" src="./js/app.js?v=20260830-134937"></script>
+    <script type="module" src="./js/app.js?v=20260830-141616"></script>
   </body>
 </html>

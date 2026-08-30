@@ -1,45 +1,63 @@
-import { bindCommandUI, loadCommands } from './commands.js?v=20260830-134937'
+import {
+  bindCommandUI,
+  loadCommands,
+  showCommandDirectory
+} from './commands.js?v=20260830-141616'
 
 import { loadAccount } from './account.js'
 
-import { loadRedemptions } from './redemptions.js?v=20260830-134937'
+import {
+  loadRedemptions
+} from './redemptions.js?v=20260830-141616'
 
-import { loadGameQueue } from './gamequeue.js'
+import {
+  loadGameQueue
+} from './gamequeue.js'
 
-import { loadGameLibrary, loadCompletedGames } from './gamelibrary.js?v=20260827-1'
+import {
+  loadGameLibrary,
+  loadCompletedGames
+} from './gamelibrary.js'
 
 function hideSpecialViews () {
-  const gameQueuePanel = document.getElementById('gameQueuePanel')
+  const ids = [
+    'gameQueuePanel',
+    'gameLibraryPanel',
+    'completedGamesPanel'
+  ]
 
-  const gameLibraryPanel = document.getElementById('gameLibraryPanel')
+  ids.forEach(id => {
+    const panel =
+      document.getElementById(id)
 
-  const completedGamesPanel = document.getElementById('completedGamesPanel')
-
-  if (gameQueuePanel) {
-    gameQueuePanel.hidden = true
-  }
-
-  if (gameLibraryPanel) {
-    gameLibraryPanel.hidden = true
-  }
-
-  if (completedGamesPanel) {
-    completedGamesPanel.hidden = true
-  }
-}
-
-function clearNavigation () {
-  document.querySelectorAll('.nav-btn').forEach(button => {
-    button.classList.remove('active')
+    if (panel) {
+      panel.hidden = true
+    }
   })
 }
 
-function scrollToMobileContent (element) {
+function clearNavigation () {
+  document
+    .querySelectorAll('.nav-btn')
+    .forEach(button => {
+      button.classList.remove(
+        'active'
+      )
+    })
+}
+
+function scrollToMobileContent (
+  element
+) {
   if (!element) {
     return
   }
 
-  if (!window.matchMedia('(max-width: 900px)').matches) {
+  if (
+    !window.matchMedia(
+      '(max-width: 900px)'
+    ).matches
+  ) {
     return
   }
 
@@ -51,15 +69,26 @@ function scrollToMobileContent (element) {
   })
 }
 
-function showCommandDatabase () {
-  const searchPanel = document.getElementById('searchPanel')
+function showCommands () {
+  const searchPanel =
+    document.getElementById(
+      'searchPanel'
+    )
 
-  const commandPanel = document.getElementById('commandDatabasePanel')
+  const commandPanel =
+    document.getElementById(
+      'commandDatabasePanel'
+    )
+
+  const commandsBtn =
+    document.getElementById(
+      'commandsBtn'
+    )
 
   hideSpecialViews()
 
   if (searchPanel) {
-    searchPanel.hidden = false
+    searchPanel.hidden = true
   }
 
   if (commandPanel) {
@@ -67,16 +96,35 @@ function showCommandDatabase () {
   }
 
   clearNavigation()
+
+  if (commandsBtn) {
+    commandsBtn.classList.add(
+      'active'
+    )
+  }
+
+  showCommandDirectory()
+
+  scrollToMobileContent(
+    commandPanel
+  )
 }
 
 function showGameQueue () {
-  const searchPanel = document.getElementById('searchPanel')
+  const searchPanel =
+    document.getElementById(
+      'searchPanel'
+    )
 
-  const commandPanel = document.getElementById('commandDatabasePanel')
+  const commandPanel =
+    document.getElementById(
+      'commandDatabasePanel'
+    )
 
-  const gameQueuePanel = document.getElementById('gameQueuePanel')
-
-  const gameQueueBtn = document.getElementById('gameQueueBtn')
+  const panel =
+    document.getElementById(
+      'gameQueuePanel'
+    )
 
   if (searchPanel) {
     searchPanel.hidden = true
@@ -89,27 +137,36 @@ function showGameQueue () {
   hideSpecialViews()
   clearNavigation()
 
-  if (gameQueuePanel) {
-    gameQueuePanel.hidden = false
+  if (panel) {
+    panel.hidden = false
   }
 
-  if (gameQueueBtn) {
-    gameQueueBtn.classList.add('active')
-  }
+  document
+    .getElementById(
+      'gameQueueBtn'
+    )
+    ?.classList.add('active')
 
   loadGameQueue()
 
-  scrollToMobileContent(gameQueuePanel)
+  scrollToMobileContent(panel)
 }
 
 function showGameLibrary () {
-  const searchPanel = document.getElementById('searchPanel')
+  const searchPanel =
+    document.getElementById(
+      'searchPanel'
+    )
 
-  const commandPanel = document.getElementById('commandDatabasePanel')
+  const commandPanel =
+    document.getElementById(
+      'commandDatabasePanel'
+    )
 
-  const gameLibraryPanel = document.getElementById('gameLibraryPanel')
-
-  const gameLibraryBtn = document.getElementById('gameLibraryBtn')
+  const panel =
+    document.getElementById(
+      'gameLibraryPanel'
+    )
 
   if (searchPanel) {
     searchPanel.hidden = true
@@ -122,27 +179,36 @@ function showGameLibrary () {
   hideSpecialViews()
   clearNavigation()
 
-  if (gameLibraryPanel) {
-    gameLibraryPanel.hidden = false
+  if (panel) {
+    panel.hidden = false
   }
 
-  if (gameLibraryBtn) {
-    gameLibraryBtn.classList.add('active')
-  }
+  document
+    .getElementById(
+      'gameLibraryBtn'
+    )
+    ?.classList.add('active')
 
   loadGameLibrary()
 
-  scrollToMobileContent(gameLibraryPanel)
+  scrollToMobileContent(panel)
 }
 
 function showCompletedGames () {
-  const searchPanel = document.getElementById('searchPanel')
+  const searchPanel =
+    document.getElementById(
+      'searchPanel'
+    )
 
-  const commandPanel = document.getElementById('commandDatabasePanel')
+  const commandPanel =
+    document.getElementById(
+      'commandDatabasePanel'
+    )
 
-  const completedGamesPanel = document.getElementById('completedGamesPanel')
-
-  const completedGamesBtn = document.getElementById('completedGamesBtn')
+  const panel =
+    document.getElementById(
+      'completedGamesPanel'
+    )
 
   if (searchPanel) {
     searchPanel.hidden = true
@@ -155,51 +221,57 @@ function showCompletedGames () {
   hideSpecialViews()
   clearNavigation()
 
-  if (completedGamesPanel) {
-    completedGamesPanel.hidden = false
+  if (panel) {
+    panel.hidden = false
   }
 
-  if (completedGamesBtn) {
-    completedGamesBtn.classList.add('active')
-  }
+  document
+    .getElementById(
+      'completedGamesBtn'
+    )
+    ?.classList.add('active')
 
   loadCompletedGames()
 
-  scrollToMobileContent(completedGamesPanel)
+  scrollToMobileContent(panel)
 }
 
 function bindViewSwitching () {
-  const gameQueueBtn = document.getElementById('gameQueueBtn')
+  document
+    .getElementById(
+      'commandsBtn'
+    )
+    ?.addEventListener(
+      'click',
+      showCommands
+    )
 
-  const gameLibraryBtn = document.getElementById('gameLibraryBtn')
+  document
+    .getElementById(
+      'gameQueueBtn'
+    )
+    ?.addEventListener(
+      'click',
+      showGameQueue
+    )
 
-  const completedGamesBtn = document.getElementById('completedGamesBtn')
+  document
+    .getElementById(
+      'gameLibraryBtn'
+    )
+    ?.addEventListener(
+      'click',
+      showGameLibrary
+    )
 
-  const filterButtons = document.querySelectorAll('.nav-btn[data-filter]')
-
-  if (gameQueueBtn) {
-    gameQueueBtn.addEventListener('click', showGameQueue)
-  }
-
-  if (gameLibraryBtn) {
-    gameLibraryBtn.addEventListener('click', showGameLibrary)
-  }
-
-  if (completedGamesBtn) {
-    completedGamesBtn.addEventListener('click', showCompletedGames)
-  }
-
-  filterButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      showCommandDatabase()
-
-      button.classList.add('active')
-
-      const searchPanel = document.getElementById('searchPanel')
-
-      scrollToMobileContent(searchPanel)
-    })
-  })
+  document
+    .getElementById(
+      'completedGamesBtn'
+    )
+    ?.addEventListener(
+      'click',
+      showCompletedGames
+    )
 }
 
 async function startOxnet () {
@@ -209,6 +281,8 @@ async function startOxnet () {
   await loadCommands()
   await loadRedemptions()
   await loadAccount()
+
+  showCommands()
 }
 
 startOxnet()
