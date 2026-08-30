@@ -24,8 +24,7 @@ function categoryLabel (category) {
   const labels = {
     social: 'UTILITY',
     schmeckles: 'UTILITY',
-    sfx: 'SFX',
-    redemption: 'REDEMPTION'
+    sfx: 'SFX'
   }
 
   return (
@@ -45,8 +44,19 @@ function kindLabel (kind) {
   return labels[normalize(kind)] || ''
 }
 
+function isRedemptionRecord (cmd) {
+  return (
+    normalize(cmd.category) === 'redemption' ||
+    normalize(cmd.source) === 'neon-redemption' ||
+    Boolean(cmd.redemption_key)
+  )
+}
+
 function isVisibleCommand (cmd) {
-  return normalize(cmd.status) !== 'planned'
+  return (
+    normalize(cmd.status) !== 'planned' &&
+    !isRedemptionRecord(cmd)
+  )
 }
 
 function matchesCategory (cmd, filter) {
@@ -65,14 +75,6 @@ function matchesCategory (cmd, filter) {
     return (
       category === 'social' ||
       category === 'schmeckles'
-    )
-  }
-
-  if (filter === 'redemption') {
-    return (
-      normalize(cmd.category) === 'redemption' ||
-      normalize(cmd.source) === 'neon-redemption' ||
-      Boolean(cmd.redemption_key)
     )
   }
 
@@ -203,19 +205,13 @@ export function showCommandDirectory () {
       key: 'all',
       name: 'ALL COMMANDS',
       description:
-        'Every currently available OXNET command.'
+        'Every currently available OXNET chat command.'
     },
     {
       key: 'utility',
       name: 'UTILITY',
       description:
         'Account, Schmeckles and general chat commands.'
-    },
-    {
-      key: 'redemption',
-      name: 'REDEMPTIONS',
-      description:
-        'Viewer redemptions and interactive stream controls.'
     },
     {
       key: 'sfx',
@@ -290,7 +286,6 @@ function getCategoryTitle () {
   const labels = {
     all: 'ALL COMMANDS',
     utility: 'UTILITY',
-    redemption: 'REDEMPTIONS',
     sfx: 'SFX'
   }
 
@@ -462,8 +457,7 @@ export function renderCommands () {
                     cmd.cooldown &&
                     normalize(
                       cmd.cooldown
-                    ) !==
-                      'coming soon'
+                    ) !== 'coming soon'
                       ? `
                         <span
                           class="
@@ -631,7 +625,8 @@ export function getCommandStats () {
           normalize(item.status) ===
             'available' &&
           normalize(item.kind) ===
-            'chat'
+            'chat' &&
+          !isRedemptionRecord(item)
       ).length,
 
     sfxCommands:
@@ -642,31 +637,6 @@ export function getCommandStats () {
           normalize(item.status) ===
             'available'
       ).length
-  }
-}
-
-export function mergeCommands (
-  items = []
-) {
-  if (!Array.isArray(items)) {
-    return
-  }
-
-  allCommands = [
-    ...allCommands.filter(
-      item =>
-        normalize(item.source) !==
-        'neon-redemption'
-    ),
-    ...items
-  ]
-
-  updateStatus()
-
-  if (currentFilter) {
-    renderCommands()
-  } else {
-    showCommandDirectory()
   }
 }
 
@@ -781,7 +751,7 @@ export function updateStatus () {
     ${publicChatCommands}<br>
     SFX COMMANDS:
     ${sfxCommands}<br>
-    REDEEM: TWITCH CHAT<br>
+    REDEEM: OXNET PORTAL<br>
     WATCH RATE: +1 / LIVE MIN<br>
     SFX RATE: FREE<br>
     CLOCK IN: +100 / STREAM<br>

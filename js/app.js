@@ -2,13 +2,16 @@ import {
   bindCommandUI,
   loadCommands,
   showCommandDirectory
-} from './commands.js?v=20260830-141616'
-
-import { loadAccount } from './account.js'
+} from './commands.js?v=20260830-150831'
 
 import {
-  loadRedemptions
-} from './redemptions.js?v=20260830-141616'
+  loadAccount
+} from './account.js'
+
+import {
+  loadRedemptions,
+  showRedemptionDirectory
+} from './redemptions.js?v=20260830-150831'
 
 import {
   loadGameQueue
@@ -19,8 +22,10 @@ import {
   loadCompletedGames
 } from './gamelibrary.js'
 
+
 function hideSpecialViews () {
   const ids = [
+    'redemptionsPanel',
     'gameQueuePanel',
     'gameLibraryPanel',
     'completedGamesPanel'
@@ -36,6 +41,7 @@ function hideSpecialViews () {
   })
 }
 
+
 function clearNavigation () {
   document
     .querySelectorAll('.nav-btn')
@@ -45,6 +51,7 @@ function clearNavigation () {
       )
     })
 }
+
 
 function scrollToMobileContent (
   element
@@ -69,7 +76,8 @@ function scrollToMobileContent (
   })
 }
 
-function showCommands () {
+
+function hideCommandUi () {
   const searchPanel =
     document.getElementById(
       'searchPanel'
@@ -80,9 +88,25 @@ function showCommands () {
       'commandDatabasePanel'
     )
 
-  const commandsBtn =
+  if (searchPanel) {
+    searchPanel.hidden = true
+  }
+
+  if (commandPanel) {
+    commandPanel.hidden = true
+  }
+}
+
+
+function showCommands () {
+  const searchPanel =
     document.getElementById(
-      'commandsBtn'
+      'searchPanel'
+    )
+
+  const commandPanel =
+    document.getElementById(
+      'commandDatabasePanel'
     )
 
   hideSpecialViews()
@@ -97,11 +121,13 @@ function showCommands () {
 
   clearNavigation()
 
-  if (commandsBtn) {
-    commandsBtn.classList.add(
+  document
+    .getElementById(
+      'commandsBtn'
+    )
+    ?.classList.add(
       'active'
     )
-  }
 
   showCommandDirectory()
 
@@ -110,32 +136,46 @@ function showCommands () {
   )
 }
 
-function showGameQueue () {
-  const searchPanel =
+
+function showRedemptions () {
+  hideCommandUi()
+  hideSpecialViews()
+  clearNavigation()
+
+  const panel =
     document.getElementById(
-      'searchPanel'
+      'redemptionsPanel'
     )
 
-  const commandPanel =
-    document.getElementById(
-      'commandDatabasePanel'
+  if (panel) {
+    panel.hidden = false
+  }
+
+  document
+    .getElementById(
+      'redemptionsBtn'
     )
+    ?.classList.add(
+      'active'
+    )
+
+  showRedemptionDirectory()
+
+  scrollToMobileContent(
+    panel
+  )
+}
+
+
+function showGameQueue () {
+  hideCommandUi()
+  hideSpecialViews()
+  clearNavigation()
 
   const panel =
     document.getElementById(
       'gameQueuePanel'
     )
-
-  if (searchPanel) {
-    searchPanel.hidden = true
-  }
-
-  if (commandPanel) {
-    commandPanel.hidden = true
-  }
-
-  hideSpecialViews()
-  clearNavigation()
 
   if (panel) {
     panel.hidden = false
@@ -145,39 +185,27 @@ function showGameQueue () {
     .getElementById(
       'gameQueueBtn'
     )
-    ?.classList.add('active')
+    ?.classList.add(
+      'active'
+    )
 
   loadGameQueue()
 
-  scrollToMobileContent(panel)
+  scrollToMobileContent(
+    panel
+  )
 }
 
-function showGameLibrary () {
-  const searchPanel =
-    document.getElementById(
-      'searchPanel'
-    )
 
-  const commandPanel =
-    document.getElementById(
-      'commandDatabasePanel'
-    )
+function showGameLibrary () {
+  hideCommandUi()
+  hideSpecialViews()
+  clearNavigation()
 
   const panel =
     document.getElementById(
       'gameLibraryPanel'
     )
-
-  if (searchPanel) {
-    searchPanel.hidden = true
-  }
-
-  if (commandPanel) {
-    commandPanel.hidden = true
-  }
-
-  hideSpecialViews()
-  clearNavigation()
 
   if (panel) {
     panel.hidden = false
@@ -187,39 +215,27 @@ function showGameLibrary () {
     .getElementById(
       'gameLibraryBtn'
     )
-    ?.classList.add('active')
+    ?.classList.add(
+      'active'
+    )
 
   loadGameLibrary()
 
-  scrollToMobileContent(panel)
+  scrollToMobileContent(
+    panel
+  )
 }
 
-function showCompletedGames () {
-  const searchPanel =
-    document.getElementById(
-      'searchPanel'
-    )
 
-  const commandPanel =
-    document.getElementById(
-      'commandDatabasePanel'
-    )
+function showCompletedGames () {
+  hideCommandUi()
+  hideSpecialViews()
+  clearNavigation()
 
   const panel =
     document.getElementById(
       'completedGamesPanel'
     )
-
-  if (searchPanel) {
-    searchPanel.hidden = true
-  }
-
-  if (commandPanel) {
-    commandPanel.hidden = true
-  }
-
-  hideSpecialViews()
-  clearNavigation()
 
   if (panel) {
     panel.hidden = false
@@ -229,12 +245,17 @@ function showCompletedGames () {
     .getElementById(
       'completedGamesBtn'
     )
-    ?.classList.add('active')
+    ?.classList.add(
+      'active'
+    )
 
   loadCompletedGames()
 
-  scrollToMobileContent(panel)
+  scrollToMobileContent(
+    panel
+  )
 }
+
 
 function bindViewSwitching () {
   document
@@ -244,6 +265,15 @@ function bindViewSwitching () {
     ?.addEventListener(
       'click',
       showCommands
+    )
+
+  document
+    .getElementById(
+      'redemptionsBtn'
+    )
+    ?.addEventListener(
+      'click',
+      showRedemptions
     )
 
   document
@@ -274,6 +304,7 @@ function bindViewSwitching () {
     )
 }
 
+
 async function startOxnet () {
   bindCommandUI()
   bindViewSwitching()
@@ -284,5 +315,6 @@ async function startOxnet () {
 
   showCommands()
 }
+
 
 startOxnet()
