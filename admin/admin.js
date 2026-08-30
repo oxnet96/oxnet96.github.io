@@ -276,8 +276,14 @@ async function loadAdminGames () {
 
     renderAdminGames(games)
 
-    document.getElementById('adminGameCount').textContent =
-      games.length.toLocaleString()
+    const gameCount = document.getElementById('adminGameCount')
+
+
+    if (gameCount) {
+
+      gameCount.textContent = games.length.toLocaleString()
+
+    }
   } catch (error) {
     console.error('Admin game queue failed.', error)
 
