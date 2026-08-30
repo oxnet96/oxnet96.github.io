@@ -34,7 +34,10 @@ export async function handleCommandRoutes(context) {
           category: row.category,
           kind: row.kind,
           description: row.description,
-          cost: Number(row.cost),
+          cost:
+            String(row.category || "").toLowerCase() === "sfx"
+              ? 0
+              : Number(row.cost),
           cooldown: row.cooldown,
           example: row.example,
           status: row.status,

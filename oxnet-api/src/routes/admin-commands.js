@@ -82,7 +82,7 @@ function normalizeCommandBody(body, existing = null) {
     category,
     kind,
     description,
-    cost,
+    cost: category === "sfx" ? 0 : cost,
     cooldown,
     example,
     status,
@@ -126,7 +126,10 @@ function mapCommand(row) {
     category: row.category,
     kind: row.kind,
     description: row.description,
-    cost: Number(row.cost),
+    cost:
+      String(row.category || "").toLowerCase() === "sfx"
+        ? 0
+        : Number(row.cost),
     cooldown: row.cooldown,
     example: row.example,
     status: row.status,

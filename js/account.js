@@ -80,7 +80,7 @@ function setLoggedInState(data) {
 function updateOnlineStatus(data) {
   const {
     publicChatCommands,
-    paidSfx
+    sfxCommands
   } = getCommandStats();
 
   document
@@ -90,9 +90,9 @@ function updateOnlineStatus(data) {
       USER: ${escapeHtml(data.login)}<br>
       ECONOMY: SCHMECKLES<br>
       PUBLIC CHAT CMDS: ${publicChatCommands}<br>
-      PAID SFX: ${paidSfx}<br>
+      SFX COMMANDS: ${sfxCommands}<br>
       WATCH RATE: +1 / LIVE MIN<br>
-      SFX RATE: 100 EACH<br>
+      SFX RATE: FREE<br>
       CLOCK IN: +100 / STREAM<br>
       FIRST CLAIM: +500<br>
       <br>

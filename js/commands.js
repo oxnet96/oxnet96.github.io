@@ -49,7 +49,7 @@ export function getCommandStats () {
         normalize(item.kind) === 'chat'
     ).length,
 
-    paidSfx: allCommands.filter(
+    sfxCommands: allCommands.filter(
       item =>
         normalize(item.category) === 'sfx' &&
         normalize(item.status) === 'available'
@@ -151,13 +151,19 @@ export function renderCommands () {
             }
 
             ${
-              Number(cmd.cost || 0) > 0
+              normalize(cmd.category) === 'sfx'
                 ? `
                   <span class="badge cost">
-                    ${Number(cmd.cost).toLocaleString()} SCHMECKLES
+                    FREE
                   </span>
                 `
-                : ''
+                : normalize(cmd.category) === 'sfx' || Number(cmd.cost || 0) > 0
+                  ? `
+                    <span class="badge cost">
+                      ${normalize(cmd.category) === 'sfx' ? 'FREE' : Number(cmd.cost).toLocaleString() + ' SCHMECKLES'}
+                    </span>
+                  `
+                  : ''
             }
 
             ${
@@ -270,7 +276,7 @@ export function bindCommandUI () {
 }
 
 export function updateStatus () {
-  const { publicChatCommands, paidSfx } = getCommandStats()
+  const { publicChatCommands, sfxCommands } = getCommandStats()
 
   const statusBox = document.getElementById('statusBox')
 
@@ -282,10 +288,10 @@ export function updateStatus () {
     CONNECTED TO OXNET_96<br>
     ECONOMY: SCHMECKLES<br>
     PUBLIC CHAT CMDS: ${publicChatCommands}<br>
-    PAID SFX: ${paidSfx}<br>
+    SFX COMMANDS: ${sfxCommands}<br>
     REDEEM: TWITCH CHAT<br>
     WATCH RATE: +1 / LIVE MIN<br>
-    SFX RATE: 100 EACH<br>
+    SFX RATE: FREE<br>
     CLOCK IN: +100 / STREAM<br>
     FIRST CLAIM: +500<br>
     <br>
