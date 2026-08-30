@@ -1,8 +1,8 @@
-import { bindCommandUI, loadCommands } from './commands.js?v=20260827-6'
+import { bindCommandUI, loadCommands } from './commands.js?v=20260830-134937'
 
 import { loadAccount } from './account.js'
 
-import { loadRedemptions } from './redemptions.js?v=20260827-6'
+import { loadRedemptions } from './redemptions.js?v=20260830-134937'
 
 import { loadGameQueue } from './gamequeue.js'
 

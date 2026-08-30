@@ -38,36 +38,85 @@
               <div class="panel-header">OXNET NAVIGATION</div>
 
               <div class="sidebar">
-                <button class="nav-btn active" data-filter="all">
-                  EVERYTHING
+
+                <div
+                  style="
+                    margin: 2px 0 5px;
+                    padding: 4px 6px;
+                    font-family: 'Courier New', monospace;
+                    font-size: 12px;
+                    font-weight: bold;
+                  "
+                >
+                  COMMANDS
+                </div>
+
+                <button
+                  class="nav-btn active"
+                  data-filter="all"
+                  style="
+                    margin-left: 10px;
+                    width: calc(100% - 10px);
+                  "
+                >
+                  ALL
                 </button>
 
-                <button class="nav-btn" data-filter="social">UTILITY</button>
-
-                <button class="nav-btn" data-filter="schmeckles">
-                  SCHMECKLES
+                <button
+                  class="nav-btn"
+                  data-filter="utility"
+                  style="
+                    margin-left: 10px;
+                    width: calc(100% - 10px);
+                  "
+                >
+                  UTILITY
                 </button>
 
-                <button class="nav-btn" data-filter="sfx">SFX</button>
-
-                <button class="nav-btn" data-filter="redemption">
+                <button
+                  class="nav-btn"
+                  data-filter="redemption"
+                  style="
+                    margin-left: 10px;
+                    width: calc(100% - 10px);
+                  "
+                >
                   REDEMPTIONS
                 </button>
 
-                <button class="nav-btn" id="gameQueueBtn">GAME QUEUE</button>
+                <button
+                  class="nav-btn"
+                  data-filter="sfx"
+                  style="
+                    margin-left: 10px;
+                    width: calc(100% - 10px);
+                  "
+                >
+                  SFX
+                </button>
 
-                <button class="nav-btn" id="gameLibraryBtn">
+                <div style="height: 8px"></div>
+
+                <button
+                  class="nav-btn"
+                  id="gameQueueBtn"
+                >
+                  GAME QUEUE
+                </button>
+
+                <button
+                  class="nav-btn"
+                  id="gameLibraryBtn"
+                >
                   GAME LIBRARY
                 </button>
 
-                <button class="nav-btn" id="completedGamesBtn">
+                <button
+                  class="nav-btn"
+                  id="completedGamesBtn"
+                >
                   COMPLETED GAMES
                 </button>
-
-                <button class="nav-btn" data-filter="planned">
-                  COMING SOON
-                </button>
-
                 <div class="status-box" id="statusBox">
                   CONNECTED TO OXNET_96<br />
                   ECONOMY: SCHMECKLES<br />
@@ -146,7 +195,7 @@
                     id="searchInput"
                     class="search"
                     type="text"
-                    placeholder="search commands, SFX, economy, redemptions..."
+                    placeholder="search utility, SFX, redemptions, commands..."
                   />
 
                   <button id="findBtn" class="find-btn">FIND</button>
@@ -238,6 +287,6 @@
       </div>
     </div>
 
-    <script type="module" src="./js/app.js?v=20260827-6"></script>
+    <script type="module" src="./js/app.js?v=20260830-134937"></script>
   </body>
 </html>

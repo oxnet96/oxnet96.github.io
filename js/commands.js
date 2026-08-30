@@ -2,6 +2,7 @@ import { API_URL } from './config.js'
 
 let allCommands = []
 let currentFilter = 'all'
+let copyBindingInstalled = false
 
 export function normalize (value) {
   return String(value || '')
@@ -21,12 +22,15 @@ export function escapeHtml (value) {
 function categoryLabel (category) {
   const labels = {
     social: 'UTILITY',
-    schmeckles: 'SCHMECKLES',
+    schmeckles: 'UTILITY',
     sfx: 'SFX',
     redemption: 'REDEMPTION'
   }
 
-  return labels[normalize(category)] || String(category || '').toUpperCase()
+  return (
+    labels[normalize(category)] ||
+    String(category || '').toUpperCase()
+  )
 }
 
 function kindLabel (kind) {
@@ -34,55 +38,162 @@ function kindLabel (kind) {
     chat: 'CHAT',
     'chat-redemption': 'TWITCH CHAT',
     'channel-point': 'CHANNEL POINT',
-    portal: 'OXNET PORTAL',
-    planned: 'SYSTEM'
+    portal: 'OXNET PORTAL'
   }
 
   return labels[normalize(kind)] || ''
 }
 
+function getCopyCommand (cmd) {
+  if (
+    normalize(cmd.status) !== 'available'
+  ) {
+    return ''
+  }
+
+  const example = String(
+    cmd.example || ''
+  ).trim()
+
+  const command = String(
+    cmd.command || ''
+  ).trim()
+
+  /*
+    Prefer the useful example:
+      !gamble all
+      !so @streamer
+      !addgame G####
+
+    Fall back to the command itself.
+  */
+
+  if (example.startsWith('!')) {
+    return example
+  }
+
+  if (command.startsWith('!')) {
+    return command
+  }
+
+  return ''
+}
+
+async function copyCommandToClipboard (
+  text,
+  button
+) {
+  if (!text) {
+    return
+  }
+
+  const original =
+    button.textContent.trim()
+
+  try {
+    await navigator.clipboard.writeText(
+      text
+    )
+
+    button.textContent = 'COPIED!'
+
+    setTimeout(() => {
+      if (document.body.contains(button)) {
+        button.textContent = original
+      }
+    }, 1200)
+  } catch (error) {
+    console.error(
+      'Clipboard failed.',
+      error
+    )
+
+    window.prompt(
+      'COPY THIS COMMAND:',
+      text
+    )
+  }
+}
+
 export function getCommandStats () {
   return {
-    publicChatCommands: allCommands.filter(
-      item =>
-        normalize(item.status) === 'available' &&
-        normalize(item.kind) === 'chat'
-    ).length,
+    publicChatCommands:
+      allCommands.filter(
+        item =>
+          normalize(item.status) ===
+            'available' &&
+          normalize(item.kind) ===
+            'chat'
+      ).length,
 
-    sfxCommands: allCommands.filter(
-      item =>
-        normalize(item.category) === 'sfx' &&
-        normalize(item.status) === 'available'
-    ).length
+    sfxCommands:
+      allCommands.filter(
+        item =>
+          normalize(item.category) ===
+            'sfx' &&
+          normalize(item.status) ===
+            'available'
+      ).length
   }
 }
 
 export function renderCommands () {
-  const container = document.getElementById('commandsContainer')
+  const container =
+    document.getElementById(
+      'commandsContainer'
+    )
 
-  const searchInput = document.getElementById('searchInput')
+  const searchInput =
+    document.getElementById(
+      'searchInput'
+    )
 
   if (!container || !searchInput) {
     return
   }
 
-  const query = normalize(searchInput.value)
+  const query =
+    normalize(searchInput.value)
 
   const filtered = allCommands
     .filter(cmd => {
+      /*
+        Coming-soon/planned entries are no longer
+        part of the viewer-facing portal.
+      */
+
+      if (
+        normalize(cmd.status) === 'planned'
+      ) {
+        return false
+      }
+
       let matchesFilter = false
 
       if (currentFilter === 'all') {
         matchesFilter = true
-      } else if (currentFilter === 'planned') {
-        matchesFilter = normalize(cmd.status) === 'planned'
-      } else if (currentFilter === 'redemption') {
+      } else if (
+        currentFilter === 'utility'
+      ) {
+        const category =
+          normalize(cmd.category)
+
         matchesFilter =
-          normalize(cmd.category) === 'redemption' ||
-          normalize(cmd.source) === 'neon-redemption' ||
+          category === 'social' ||
+          category === 'schmeckles'
+      } else if (
+        currentFilter === 'redemption'
+      ) {
+        matchesFilter =
+          normalize(cmd.category) ===
+            'redemption' ||
+          normalize(cmd.source) ===
+            'neon-redemption' ||
           Boolean(cmd.redemption_key)
       } else {
-        matchesFilter = normalize(cmd.category) === currentFilter
+        matchesFilter =
+          normalize(cmd.category) ===
+          currentFilter
       }
 
       const haystack = [
@@ -98,16 +209,35 @@ export function renderCommands () {
         .join(' ')
         .toLowerCase()
 
-      const matchesSearch = !query || haystack.includes(query)
+      const matchesSearch =
+        !query ||
+        haystack.includes(query)
 
-      return matchesFilter && matchesSearch
+      return (
+        matchesFilter &&
+        matchesSearch
+      )
     })
     .sort((a, b) => {
-      const aPlanned = normalize(a.status) === 'planned' ? 1 : 0
+      const aName = String(
+        a.name ||
+        a.command ||
+        ''
+      )
 
-      const bPlanned = normalize(b.status) === 'planned' ? 1 : 0
+      const bName = String(
+        b.name ||
+        b.command ||
+        ''
+      )
 
-      return aPlanned - bPlanned
+      return aName.localeCompare(
+        bName,
+        undefined,
+        {
+          sensitivity: 'base'
+        }
+      )
     })
 
   if (!filtered.length) {
@@ -116,130 +246,204 @@ export function renderCommands () {
         *** NO MATCHES FOUND. TRY AGAIN, GENIUS.
       </div>
     `
+
     return
   }
 
-  container.innerHTML = filtered
-    .map(cmd => {
-      const planned = normalize(cmd.status) === 'planned'
+  container.innerHTML =
+    filtered
+      .map(cmd => {
+        const kind =
+          kindLabel(cmd.kind)
 
-      const kind = kindLabel(cmd.kind)
+        const displayName =
+          cmd.name ||
+          cmd.command ||
+          'UNKNOWN'
 
-      const displayName = cmd.name || cmd.command || 'UNKNOWN'
+        const copyCommand =
+          getCopyCommand(cmd)
 
-      return `
-        <div class="command-card ${planned ? 'planned' : ''}">
+        const hasAction =
+          Boolean(
+            cmd.action &&
+            cmd.action_label
+          )
 
-          <div class="command-title">
+        return `
+          <div class="command-card">
 
-            <div class="command-name">
-              ${escapeHtml(displayName)}
-            </div>
+            <div class="command-title">
 
-            <span class="badge ${planned ? 'planned' : 'status'}">
-              ${planned ? 'COMING SOON' : categoryLabel(cmd.category)}
-            </span>
+              <div class="command-name">
+                ${escapeHtml(displayName)}
+              </div>
 
-            ${
-              kind
-                ? `
-                  <span class="badge kind">
-                    ${escapeHtml(kind)}
-                  </span>
-                `
-                : ''
-            }
+              <span class="badge status">
+                ${categoryLabel(
+                  cmd.category
+                )}
+              </span>
 
-            ${
-              normalize(cmd.category) === 'sfx'
-                ? `
-                  <span class="badge cost">
-                    FREE
-                  </span>
-                `
-                : normalize(cmd.category) === 'sfx' || Number(cmd.cost || 0) > 0
+              ${
+                kind
                   ? `
-                    <span class="badge cost">
-                      ${normalize(cmd.category) === 'sfx' ? 'FREE' : Number(cmd.cost).toLocaleString() + ' SCHMECKLES'}
+                    <span class="badge kind">
+                      ${escapeHtml(kind)}
                     </span>
                   `
                   : ''
-            }
+              }
+
+              ${
+                normalize(
+                  cmd.category
+                ) === 'sfx'
+                  ? `
+                    <span class="badge cost">
+                      FREE
+                    </span>
+                  `
+                  : Number(
+                        cmd.cost || 0
+                      ) > 0
+                    ? `
+                      <span class="badge cost">
+                        ${Number(
+                          cmd.cost
+                        ).toLocaleString()}
+                        SCHMECKLES
+                      </span>
+                    `
+                    : ''
+              }
+
+              ${
+                cmd.cooldown &&
+                normalize(
+                  cmd.cooldown
+                ) !== 'coming soon'
+                  ? `
+                    <span
+                      class="badge cooldown"
+                    >
+                      ${escapeHtml(
+                        cmd.cooldown
+                      )}
+                    </span>
+                  `
+                  : ''
+              }
+
+              ${
+                cmd.isNew
+                  ? `
+                    <span class="badge new">
+                      NEW
+                    </span>
+                  `
+                  : ''
+              }
+
+            </div>
+
+            <div class="command-desc">
+              ${escapeHtml(
+                cmd.description || ''
+              )}
+            </div>
 
             ${
-              cmd.cooldown && normalize(cmd.cooldown) !== 'coming soon'
+              cmd.example
                 ? `
-                  <span class="badge cooldown">
-                    ${escapeHtml(cmd.cooldown)}
-                  </span>
-                `
-                : ''
-            }
-
-            ${
-              cmd.isNew
-                ? `
-                  <span class="badge new">
-                    NEW
-                  </span>
-                `
-                : ''
-            }
-
-          </div>
-
-          <div class="command-desc">
-            ${escapeHtml(cmd.description || '')}
-          </div>
-
-          ${
-            cmd.example
-              ? `
-                <div class="command-example">
-                  &gt; ${escapeHtml(cmd.example)}
-                </div>
-              `
-              : ''
-          }
-
-          ${
-            cmd.action && cmd.action_label
-              ? `
-                <div
-                  style="
-                    margin-top: 9px;
-                    display: flex;
-                    justify-content: flex-start;
-                  "
-                >
-                  <button
-                    class="find-btn"
-                    type="button"
-                    data-command-action="${escapeHtml(cmd.action)}"
-                    data-redemption-key="${escapeHtml(
-                      cmd.redemption_key || ''
-                    )}"
+                  <div
+                    class="command-example"
                   >
-                    ${escapeHtml(cmd.action_label)}
-                  </button>
-                </div>
-              `
-              : ''
-          }
+                    &gt;
+                    ${escapeHtml(
+                      cmd.example
+                    )}
+                  </div>
+                `
+                : ''
+            }
 
-        </div>
-      `
-    })
-    .join('')
+            ${
+              copyCommand || hasAction
+                ? `
+                  <div
+                    style="
+                      margin-top: 9px;
+                      display: flex;
+                      flex-wrap: wrap;
+                      gap: 6px;
+                      justify-content:
+                        flex-start;
+                    "
+                  >
+
+                    ${
+                      copyCommand
+                        ? `
+                          <button
+                            class="find-btn"
+                            type="button"
+                            data-copy-command="${escapeHtml(
+                              copyCommand
+                            )}"
+                          >
+                            COPY COMMAND
+                          </button>
+                        `
+                        : ''
+                    }
+
+                    ${
+                      hasAction
+                        ? `
+                          <button
+                            class="find-btn"
+                            type="button"
+                            data-command-action="${escapeHtml(
+                              cmd.action
+                            )}"
+                            data-redemption-key="${escapeHtml(
+                              cmd.redemption_key ||
+                              ''
+                            )}"
+                          >
+                            ${escapeHtml(
+                              cmd.action_label
+                            )}
+                          </button>
+                        `
+                        : ''
+                    }
+
+                  </div>
+                `
+                : ''
+            }
+
+          </div>
+        `
+      })
+      .join('')
 }
 
-export function mergeCommands (items = []) {
+export function mergeCommands (
+  items = []
+) {
   if (!Array.isArray(items)) {
     return
   }
 
   allCommands = [
-    ...allCommands.filter(item => normalize(item.source) !== 'neon-redemption'),
+    ...allCommands.filter(
+      item =>
+        normalize(item.source) !==
+        'neon-redemption'
+    ),
     ...items
   ]
 
@@ -248,37 +452,95 @@ export function mergeCommands (items = []) {
 }
 
 export function bindCommandUI () {
-  const buttons = document.querySelectorAll('.nav-btn[data-filter]')
+  const buttons =
+    document.querySelectorAll(
+      '.nav-btn[data-filter]'
+    )
 
   buttons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      buttons.forEach(button => button.classList.remove('active'))
+    btn.addEventListener(
+      'click',
+      () => {
+        buttons.forEach(
+          button =>
+            button.classList.remove(
+              'active'
+            )
+        )
 
-      btn.classList.add('active')
+        btn.classList.add('active')
 
-      currentFilter = btn.dataset.filter
+        currentFilter =
+          btn.dataset.filter
 
-      renderCommands()
-    })
+        renderCommands()
+      }
+    )
   })
 
-  const searchInput = document.getElementById('searchInput')
+  const searchInput =
+    document.getElementById(
+      'searchInput'
+    )
 
-  const findBtn = document.getElementById('findBtn')
+  const findBtn =
+    document.getElementById(
+      'findBtn'
+    )
 
   if (searchInput) {
-    searchInput.addEventListener('input', renderCommands)
+    searchInput.addEventListener(
+      'input',
+      renderCommands
+    )
   }
 
   if (findBtn) {
-    findBtn.addEventListener('click', renderCommands)
+    findBtn.addEventListener(
+      'click',
+      renderCommands
+    )
+  }
+
+  /*
+    Delegated binding survives every command
+    list re-render.
+  */
+
+  if (!copyBindingInstalled) {
+    copyBindingInstalled = true
+
+    document.addEventListener(
+      'click',
+      event => {
+        const button =
+          event.target.closest(
+            '[data-copy-command]'
+          )
+
+        if (!button) {
+          return
+        }
+
+        copyCommandToClipboard(
+          button.dataset.copyCommand,
+          button
+        )
+      }
+    )
   }
 }
 
 export function updateStatus () {
-  const { publicChatCommands, sfxCommands } = getCommandStats()
+  const {
+    publicChatCommands,
+    sfxCommands
+  } = getCommandStats()
 
-  const statusBox = document.getElementById('statusBox')
+  const statusBox =
+    document.getElementById(
+      'statusBox'
+    )
 
   if (!statusBox) {
     return
@@ -287,8 +549,10 @@ export function updateStatus () {
   statusBox.innerHTML = `
     CONNECTED TO OXNET_96<br>
     ECONOMY: SCHMECKLES<br>
-    PUBLIC CHAT CMDS: ${publicChatCommands}<br>
-    SFX COMMANDS: ${sfxCommands}<br>
+    PUBLIC CHAT CMDS:
+    ${publicChatCommands}<br>
+    SFX COMMANDS:
+    ${sfxCommands}<br>
     REDEEM: TWITCH CHAT<br>
     WATCH RATE: +1 / LIVE MIN<br>
     SFX RATE: FREE<br>
@@ -300,18 +564,26 @@ export function updateStatus () {
 }
 
 async function loadStaticCommandFallback () {
-  const response = await fetch('./commands.json', {
-    cache: 'no-store'
-  })
+  const response = await fetch(
+    './commands.json',
+    {
+      cache: 'no-store'
+    }
+  )
 
   if (!response.ok) {
-    throw new Error(`Static command fallback returned ${response.status}`)
+    throw new Error(
+      `Static command fallback returned ${response.status}`
+    )
   }
 
-  const data = await response.json()
+  const data =
+    await response.json()
 
   if (!Array.isArray(data)) {
-    throw new Error('Static command fallback returned invalid data')
+    throw new Error(
+      'Static command fallback returned invalid data'
+    )
   }
 
   return data
@@ -321,18 +593,28 @@ export async function loadCommands () {
   let backendError = null
 
   try {
-    const response = await fetch(`${API_URL}/commands`, {
-      cache: 'no-store'
-    })
+    const response = await fetch(
+      `${API_URL}/commands`,
+      {
+        cache: 'no-store'
+      }
+    )
 
     if (!response.ok) {
-      throw new Error(`Command API returned ${response.status}`)
+      throw new Error(
+        `Command API returned ${response.status}`
+      )
     }
 
-    const data = await response.json()
+    const data =
+      await response.json()
 
-    if (!Array.isArray(data.commands)) {
-      throw new Error('Command API returned invalid data')
+    if (
+      !Array.isArray(data.commands)
+    ) {
+      throw new Error(
+        'Command API returned invalid data'
+      )
     }
 
     allCommands = data.commands
@@ -351,12 +633,16 @@ export async function loadCommands () {
   }
 
   try {
-    allCommands = await loadStaticCommandFallback()
+    allCommands =
+      await loadStaticCommandFallback()
 
     updateStatus()
     renderCommands()
 
-    const statusBox = document.getElementById('statusBox')
+    const statusBox =
+      document.getElementById(
+        'statusBox'
+      )
 
     if (statusBox) {
       statusBox.innerHTML += `
@@ -365,20 +651,31 @@ export async function loadCommands () {
       `
     }
   } catch (fallbackError) {
-    console.error('OXNET command database and static fallback both failed.', {
-      backendError,
-      fallbackError
-    })
+    console.error(
+      'OXNET command database and static fallback both failed.',
+      {
+        backendError,
+        fallbackError
+      }
+    )
 
     allCommands = []
 
-    const statusBox = document.getElementById('statusBox')
-    const container = document.getElementById('commandsContainer')
+    const statusBox =
+      document.getElementById(
+        'statusBox'
+      )
+
+    const container =
+      document.getElementById(
+        'commandsContainer'
+      )
 
     if (statusBox) {
       statusBox.innerHTML = `
         CONNECTED TO OXNET_96<br>
-        COMMAND DATABASE: UNAVAILABLE<br>
+        COMMAND DATABASE:
+        UNAVAILABLE<br>
         <br>
         BACKEND: DEGRADED
       `
