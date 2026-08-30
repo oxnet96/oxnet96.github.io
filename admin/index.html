@@ -138,29 +138,193 @@
               <div class="main">
                 <!-- DASHBOARD -->
 
-                <div class="panel admin-view" id="adminViewDashboard">
-                  <div class="panel-header">OXNET CONTROL CENTER</div>
+                <div
+                  class="panel admin-view"
+                  id="adminViewDashboard"
+                >
+                  <div class="panel-header">
+                    OXNET CONTROL CENTER
+                  </div>
 
-                  <div style="padding: 12px">
-                    <div class="status-box" style="margin-top: 0">
-                      ADMINISTRATOR:
-                      <span id="adminUser"> UNKNOWN </span>
-                      <br />
+                  <style>
+                    #adminViewDashboard .dash-shell {
+                      padding: 10px;
+                    }
 
-                      API:
-                      <span id="adminApiStatus"> CONNECTING </span>
-                      <br />
+                    #adminViewDashboard .dash-status {
+                      display: flex;
+                      flex-wrap: wrap;
+                      align-items: center;
+                      gap: 8px;
+                      margin: 0 0 10px;
+                      padding: 7px 9px;
+                    }
 
-                      GAME QUEUE:
-                      <span id="adminGameCount"> --- </span>
-                      <br />
+                    #adminViewDashboard .dash-status-info {
+                      flex: 1;
+                      min-width: 220px;
+                      font-family:
+                        "Courier New",
+                        monospace;
+                      font-size: 12px;
+                    }
 
-                      PENDING SUBMISSIONS:
-                      <span id="adminSubmissionCount"> --- </span>
-                    </div>
+                    #adminViewDashboard .dash-quick {
+                      display: flex;
+                      flex-wrap: wrap;
+                      gap: 5px;
+                    }
+
+                    #adminViewDashboard .dash-metrics {
+                      display: grid;
+                      grid-template-columns:
+                        repeat(4, minmax(130px, 1fr));
+                      gap: 8px;
+                      margin-bottom: 10px;
+                    }
+
+                    #adminViewDashboard .dash-metric {
+                      margin: 0;
+                      padding: 9px;
+                      min-height: 72px;
+                    }
+
+                    #adminViewDashboard .dash-metric-label {
+                      font-family:
+                        "Courier New",
+                        monospace;
+                      font-size: 11px;
+                    }
+
+                    #adminViewDashboard .dash-metric-value {
+                      margin-top: 5px;
+                      font-family:
+                        "Courier New",
+                        monospace;
+                      font-size: 24px;
+                      font-weight: bold;
+                    }
+
+                    #adminViewDashboard .dash-work-grid {
+                      display: grid;
+                      grid-template-columns:
+                        minmax(0, 1.05fr)
+                        minmax(0, 0.95fr);
+                      gap: 10px;
+                      margin-bottom: 10px;
+                    }
+
+                    #adminViewDashboard .dash-section {
+                      min-width: 0;
+                    }
+
+                    #adminViewDashboard .dash-section-head {
+                      display: flex;
+                      align-items: center;
+                      gap: 6px;
+                      margin-bottom: 6px;
+                    }
+
+                    #adminViewDashboard .dash-section-head
+                    .panel-header {
+                      flex: 1;
+                    }
+
+                    #adminViewDashboard .dash-list {
+                      display: grid;
+                      gap: 6px;
+                    }
+
+                    #adminViewDashboard .dash-card {
+                      margin: 0;
+                      padding: 8px;
+                    }
+
+                    #adminViewDashboard .dash-card-title {
+                      display: flex;
+                      align-items: center;
+                      flex-wrap: wrap;
+                      gap: 6px;
+                    }
+
+                    #adminViewDashboard .dash-card-name {
+                      flex: 1;
+                      min-width: 140px;
+                      font-weight: bold;
+                      overflow-wrap: anywhere;
+                    }
+
+                    #adminViewDashboard .dash-card-meta {
+                      margin-top: 5px;
+                      font-family:
+                        "Courier New",
+                        monospace;
+                      font-size: 11px;
+                      line-height: 1.4;
+                    }
+
+                    #adminViewDashboard .dash-economy-grid {
+                      display: grid;
+                      grid-template-columns:
+                        repeat(3, minmax(0, 1fr));
+                      gap: 6px;
+                    }
+
+                    #adminViewDashboard .dash-positive {
+                      font-weight: bold;
+                    }
+
+                    #adminViewDashboard .dash-negative {
+                      font-weight: bold;
+                    }
+
+                    #adminViewDashboard .dash-empty {
+                      grid-column: 1 / -1;
+                    }
+
+                    @media (max-width: 1000px) {
+                      #adminViewDashboard .dash-metrics {
+                        grid-template-columns:
+                          repeat(2, 1fr);
+                      }
+
+                      #adminViewDashboard .dash-economy-grid {
+                        grid-template-columns:
+                          repeat(2, 1fr);
+                      }
+                    }
+
+                    @media (max-width: 760px) {
+                      #adminViewDashboard .dash-work-grid {
+                        grid-template-columns: 1fr;
+                      }
+
+                      #adminViewDashboard .dash-economy-grid {
+                        grid-template-columns: 1fr;
+                      }
+                    }
+
+                    @media (max-width: 520px) {
+                      #adminViewDashboard .dash-metrics {
+                        grid-template-columns: 1fr;
+                      }
+                    }
+                  </style>
+
+                  <!--
+                    Retained for existing admin.js session/status state.
+                    Dashboard UI reads these values but renders them elsewhere.
+                  -->
+                  <span id="adminUser" hidden>OXNET ADMIN</span>
+                  <span id="adminApiStatus" hidden>CONNECTING</span>
+
+                  <div
+                    id="adminDashboardApp"
+                    class="dash-shell"
+                  >
+                    LOADING OXNET CONTROL CENTER...
                   </div>
                 </div>
-
                 <!-- GAME QUEUE -->
 
                 <div class="panel admin-view" id="adminViewGames" hidden>
@@ -478,6 +642,6 @@
       </div>
     </div>
 
-    <script type="module" src="./admin.js?v=20260830-013403"></script>
+    <script type="module" src="./admin.js?v=20260830-020242"></script>
   </body>
 </html>

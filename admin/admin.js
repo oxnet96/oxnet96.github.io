@@ -1,6 +1,7 @@
 import { API_URL, SESSION_KEY } from '../js/config.js'
 import { loadAdminCommands } from './admin-commands-ui.js'
 import { loadAdminEconomy } from './admin-economy-ui.js?v=20260830-013403'
+import { loadAdminDashboard } from './admin-dashboard-ui.js?v=20260830-020242'
 
 function getSession () {
   return localStorage.getItem(SESSION_KEY)
@@ -87,6 +88,13 @@ function bindNavigation () {
       if (targetView) {
         targetView.hidden = false
       }
+
+      if (target === 'dashboard') {
+
+        await loadAdminDashboard()
+
+      }
+
 
       if (target === 'games') {
         await loadAdminGames()
@@ -2642,7 +2650,7 @@ async function verifyAdmin () {
 
     showAdmin(data)
 
-    await loadDashboard()
+    await loadAdminDashboard()
   } catch (error) {
     console.error('OXNET admin verification failed.', error)
 

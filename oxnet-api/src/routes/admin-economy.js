@@ -33,6 +33,129 @@ export async function handleAdminEconomyRoutes(context) {
 
   /*
   ==================================================
+  DASHBOARD ECONOMY SUMMARY
+
+  GET /admin/economy/summary
+  ==================================================
+  */
+
+  if (
+    url.pathname === "/admin/economy/summary" &&
+    request.method === "GET"
+  ) {
+    try {
+      const summaryRows = await sql`
+        select
+          count(u.id) as user_count,
+          coalesce(
+            sum(
+              coalesce(b.schmeckles, 0)
+            ),
+            0
+          ) as total_schmeckles
+        from users u
+        left join balances b
+          on b.user_id = u.id
+      `;
+
+      const transactionRows = await sql`
+        select
+          t.id,
+          t.transaction_id,
+          t.twitch_user_id,
+          t.twitch_login,
+          t.twitch_display_name,
+          t.delta,
+          t.balance_before,
+          t.balance_after,
+          t.created_at,
+          b.reason,
+          b.source
+        from schmeckle_transactions t
+        left join schmeckle_transaction_batches b
+          on b.transaction_id = t.transaction_id
+        order by t.id desc
+        limit 12
+      `;
+
+      const summary = summaryRows[0] || {};
+
+      return jsonResponse(
+        {
+          success: true,
+
+          user_count:
+            Number(summary.user_count || 0),
+
+          total_schmeckles:
+            Number(
+              summary.total_schmeckles || 0
+            ),
+
+          recent_transactions:
+            transactionRows.map(
+              row => ({
+                id:
+                  Number(row.id),
+
+                transaction_id:
+                  row.transaction_id,
+
+                twitch_user_id:
+                  row.twitch_user_id,
+
+                twitch_login:
+                  row.twitch_login,
+
+                twitch_display_name:
+                  row.twitch_display_name,
+
+                delta:
+                  Number(row.delta || 0),
+
+                balance_before:
+                  Number(
+                    row.balance_before || 0
+                  ),
+
+                balance_after:
+                  Number(
+                    row.balance_after || 0
+                  ),
+
+                reason:
+                  row.reason,
+
+                source:
+                  row.source,
+
+                created_at:
+                  row.created_at
+              })
+            )
+        },
+        200,
+        headers
+      );
+    } catch (error) {
+      console.error(
+        "Admin economy summary failed:",
+        error
+      );
+
+      return jsonResponse(
+        {
+          error:
+            "Unable to load economy summary"
+        },
+        500,
+        headers
+      );
+    }
+  }
+
+  /*
+  ==================================================
   USER SEARCH
 
   GET /admin/economy/users?search=login
