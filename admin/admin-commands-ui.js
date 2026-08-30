@@ -31,6 +31,7 @@ async function adminFetch(path, options = {}) {
 }
 
 let commandCache = [];
+let commandFilter = "all";
 
 function commandFormHtml(item = null) {
   const editing = Boolean(item);
@@ -261,6 +262,49 @@ function renderManager() {
     return;
   }
 
+  const filterDefinitions = [
+    {
+      value: "all",
+      label: "ALL",
+      count: commandCache.length,
+    },
+    {
+      value: "social",
+      label: "UTILITY",
+      count: commandCache.filter(
+        (item) => item.category === "social",
+      ).length,
+    },
+    {
+      value: "schmeckles",
+      label: "SCHMECKLES",
+      count: commandCache.filter(
+        (item) => item.category === "schmeckles",
+      ).length,
+    },
+    {
+      value: "sfx",
+      label: "SFX",
+      count: commandCache.filter(
+        (item) => item.category === "sfx",
+      ).length,
+    },
+    {
+      value: "redemption",
+      label: "REDEMPTIONS",
+      count: commandCache.filter(
+        (item) => item.category === "redemption",
+      ).length,
+    },
+    {
+      value: "planned",
+      label: "COMING SOON",
+      count: commandCache.filter(
+        (item) => item.status === "planned",
+      ).length,
+    },
+  ];
+
   container.innerHTML = `
     <div style="padding:12px;">
       <div
@@ -284,9 +328,33 @@ function renderManager() {
         </button>
       </div>
 
-      <div class="status-box" style="margin-top:0;margin-bottom:12px;">
+      <div class="status-box" style="margin-top:0;margin-bottom:8px;">
         OXNET COMMAND DATABASE //
         ${commandCache.length.toLocaleString()} RECORDS
+      </div>
+
+      <div
+        id="adminCommandFilters"
+        style="
+          display:flex;
+          flex-wrap:wrap;
+          gap:6px;
+          margin-bottom:12px;
+        "
+      >
+        ${filterDefinitions
+          .map(
+            (filter) => `
+              <button
+                class="find-btn"
+                data-command-filter="${filter.value}"
+                ${commandFilter === filter.value ? "disabled" : ""}
+              >
+                ${filter.label} (${filter.count})
+              </button>
+            `,
+          )
+          .join("")}
       </div>
 
       <div id="adminCommandEditor"></div>
@@ -294,28 +362,54 @@ function renderManager() {
     </div>
   `;
 
-  const list = document.getElementById("adminCommandList");
-  const search = document.getElementById("adminCommandSearch");
-  const editor = document.getElementById("adminCommandEditor");
+  const list =
+    document.getElementById("adminCommandList");
+
+  const search =
+    document.getElementById("adminCommandSearch");
+
+  const editor =
+    document.getElementById("adminCommandEditor");
+
+  const filters =
+    document.getElementById("adminCommandFilters");
 
   function renderFiltered() {
-    const query = String(search.value || "").trim().toLowerCase();
+    const query = String(
+      search.value || "",
+    )
+      .trim()
+      .toLowerCase();
 
-    const filtered = !query
-      ? commandCache
-      : commandCache.filter((item) =>
-          [
-            item.command,
-            item.category,
-            item.kind,
-            item.description,
-            item.example,
-            item.status,
-          ]
-            .join(" ")
-            .toLowerCase()
-            .includes(query),
+    const filtered = commandCache.filter((item) => {
+      const matchesFilter =
+        commandFilter === "all" ||
+        (
+          commandFilter === "planned"
+            ? item.status === "planned"
+            : item.category === commandFilter
         );
+
+      if (!matchesFilter) {
+        return false;
+      }
+
+      if (!query) {
+        return true;
+      }
+
+      return [
+        item.command,
+        item.category,
+        item.kind,
+        item.description,
+        item.example,
+        item.status,
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(query);
+    });
 
     list.innerHTML = commandListHtml(filtered);
   }
@@ -323,9 +417,16 @@ function renderManager() {
   function openForm(item = null) {
     editor.innerHTML = commandFormHtml(item);
 
-    const saveBtn = document.getElementById("adminCommandSave");
-    const cancelBtn = document.getElementById("adminCommandCancel");
-    const statusBox = document.getElementById("adminCommandFormStatus");
+    const saveBtn =
+      document.getElementById("adminCommandSave");
+
+    const cancelBtn =
+      document.getElementById("adminCommandCancel");
+
+    const statusBox =
+      document.getElementById(
+        "adminCommandFormStatus",
+      );
 
     if (cancelBtn) {
       cancelBtn.addEventListener("click", () => {
@@ -335,21 +436,58 @@ function renderManager() {
 
     saveBtn.addEventListener("click", async () => {
       const payload = {
-        command: document.getElementById("adminCommandName").value.trim(),
-        category: document.getElementById("adminCommandCategory").value,
-        kind: document.getElementById("adminCommandKind").value,
-        description: document
-          .getElementById("adminCommandDescription")
-          .value.trim(),
-        cost: Number(document.getElementById("adminCommandCost").value),
-        cooldown: document
-          .getElementById("adminCommandCooldown")
-          .value.trim(),
-        example: document
-          .getElementById("adminCommandExample")
-          .value.trim(),
-        status: document.getElementById("adminCommandStatus").value,
-        isNew: document.getElementById("adminCommandIsNew").checked,
+        command:
+          document
+            .getElementById("adminCommandName")
+            .value.trim(),
+
+        category:
+          document.getElementById(
+            "adminCommandCategory",
+          ).value,
+
+        kind:
+          document.getElementById(
+            "adminCommandKind",
+          ).value,
+
+        description:
+          document
+            .getElementById(
+              "adminCommandDescription",
+            )
+            .value.trim(),
+
+        cost:
+          Number(
+            document.getElementById(
+              "adminCommandCost",
+            ).value,
+          ),
+
+        cooldown:
+          document
+            .getElementById(
+              "adminCommandCooldown",
+            )
+            .value.trim(),
+
+        example:
+          document
+            .getElementById(
+              "adminCommandExample",
+            )
+            .value.trim(),
+
+        status:
+          document.getElementById(
+            "adminCommandStatus",
+          ).value,
+
+        isNew:
+          document.getElementById(
+            "adminCommandIsNew",
+          ).checked,
       };
 
       if (item) {
@@ -366,7 +504,10 @@ function renderManager() {
         return;
       }
 
-      if (!Number.isInteger(payload.cost) || payload.cost < 0) {
+      if (
+        !Number.isInteger(payload.cost) ||
+        payload.cost < 0
+      ) {
         statusBox.innerHTML = `
           <div class="empty">
             *** INVALID SCHMECKLE COST.
@@ -376,11 +517,15 @@ function renderManager() {
       }
 
       saveBtn.disabled = true;
-      statusBox.textContent = "WRITING TO OXNET DATABASE...";
+
+      statusBox.textContent =
+        "WRITING TO OXNET DATABASE...";
 
       try {
         const response = await adminFetch(
-          item ? "/admin/commands/update" : "/admin/commands/add",
+          item
+            ? "/admin/commands/update"
+            : "/admin/commands/add",
           {
             method: "POST",
             body: JSON.stringify(payload),
@@ -390,12 +535,18 @@ function renderManager() {
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data.error || `HTTP ${response.status}`);
+          throw new Error(
+            data.error ||
+            `HTTP ${response.status}`,
+          );
         }
 
         await loadAdminCommands();
       } catch (error) {
-        console.error("Command save failed.", error);
+        console.error(
+          "Command save failed.",
+          error,
+        );
 
         statusBox.innerHTML = `
           <div class="empty">
@@ -410,64 +561,117 @@ function renderManager() {
 
   document
     .getElementById("adminCommandAddBtn")
-    .addEventListener("click", () => openForm());
+    .addEventListener(
+      "click",
+      () => openForm(),
+    );
 
-  search.addEventListener("input", renderFiltered);
+  search.addEventListener(
+    "input",
+    renderFiltered,
+  );
 
-  list.addEventListener("click", async (event) => {
-    const editButton = event.target.closest("[data-command-edit]");
-    const deleteButton = event.target.closest("[data-command-delete]");
+  filters.addEventListener("click", (event) => {
+    const button = event.target.closest(
+      "[data-command-filter]",
+    );
 
-    if (editButton) {
-      const id = Number(editButton.dataset.commandEdit);
-      const item = commandCache.find((command) => command.id === id);
-
-      if (item) {
-        openForm(item);
-        editor.scrollIntoView({
-          behavior: "smooth",
-          block: "start",
-        });
-      }
-
+    if (!button) {
       return;
     }
 
-    if (deleteButton) {
-      const id = Number(deleteButton.dataset.commandDelete);
-      const item = commandCache.find((command) => command.id === id);
+    commandFilter =
+      button.dataset.commandFilter || "all";
 
-      if (!item) {
-        return;
-      }
+    renderManager();
+  });
 
-      const confirmed = window.confirm(
-        `Delete ${item.command} from the OXNET command database?`,
+  list.addEventListener(
+    "click",
+    async (event) => {
+      const editButton = event.target.closest(
+        "[data-command-edit]",
       );
 
-      if (!confirmed) {
+      const deleteButton = event.target.closest(
+        "[data-command-delete]",
+      );
+
+      if (editButton) {
+        const id = Number(
+          editButton.dataset.commandEdit,
+        );
+
+        const item = commandCache.find(
+          (command) => command.id === id,
+        );
+
+        if (item) {
+          openForm(item);
+
+          editor.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
+
         return;
       }
 
-      try {
-        const response = await adminFetch("/admin/commands/delete", {
-          method: "POST",
-          body: JSON.stringify({ id }),
-        });
+      if (deleteButton) {
+        const id = Number(
+          deleteButton.dataset.commandDelete,
+        );
 
-        const data = await response.json();
+        const item = commandCache.find(
+          (command) => command.id === id,
+        );
 
-        if (!response.ok) {
-          throw new Error(data.error || `HTTP ${response.status}`);
+        if (!item) {
+          return;
         }
 
-        await loadAdminCommands();
-      } catch (error) {
-        console.error("Command delete failed.", error);
-        window.alert(error.message || "Unable to delete command.");
+        const confirmed = window.confirm(
+          `Delete ${item.command} from the OXNET command database?`,
+        );
+
+        if (!confirmed) {
+          return;
+        }
+
+        try {
+          const response = await adminFetch(
+            "/admin/commands/delete",
+            {
+              method: "POST",
+              body: JSON.stringify({ id }),
+            },
+          );
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(
+              data.error ||
+              `HTTP ${response.status}`,
+            );
+          }
+
+          await loadAdminCommands();
+        } catch (error) {
+          console.error(
+            "Command delete failed.",
+            error,
+          );
+
+          window.alert(
+            error.message ||
+            "Unable to delete command.",
+          );
+        }
       }
-    }
-  });
+    },
+  );
 
   renderFiltered();
 }
