@@ -1,5 +1,7 @@
 import { API_URL, SESSION_KEY } from "../js/config.js";
 
+let currentQuery = "";
+
 function getSession() {
   return localStorage.getItem(SESSION_KEY);
 }
@@ -30,6 +32,10 @@ async function adminFetch(path, options = {}) {
   });
 }
 
+function getApp() {
+  return document.getElementById("adminEconomyApp");
+}
+
 function formatNumber(value) {
   return Number(value || 0).toLocaleString();
 }
@@ -48,60 +54,199 @@ function formatDate(value) {
   return date.toLocaleString();
 }
 
-function renderUserRows(users) {
-  if (!users.length) {
-    return `
+function getUserName(user) {
+  return (
+    user.twitch_display_name ||
+    user.twitch_login ||
+    user.twitch_user_id ||
+    "UNKNOWN USER"
+  );
+}
+
+function sortUsers(users) {
+  return [...users].sort((a, b) =>
+    getUserName(a).localeCompare(
+      getUserName(b),
+      undefined,
+      {
+        sensitivity: "base",
+      },
+    ),
+  );
+}
+
+function renderDirectoryLoading() {
+  const app = getApp();
+
+  if (!app) {
+    return;
+  }
+
+  app.innerHTML = `
+    <div class="status-box" style="margin:0;">
+      LOADING OXNET USER DIRECTORY...
+    </div>
+  `;
+}
+
+function renderUserGrid(users) {
+  const app = getApp();
+
+  if (!app) {
+    return;
+  }
+
+  const sortedUsers = sortUsers(users);
+
+  const cards = sortedUsers.length
+    ? sortedUsers
+        .map(
+          (user) => `
+            <button
+              type="button"
+              class="command-card economy-user-card"
+              data-economy-open="${escapeHtml(
+                user.twitch_user_id,
+              )}"
+            >
+              <div>
+                <div class="command-title">
+                  <div
+                    class="command-name economy-user-name"
+                  >
+                    ${escapeHtml(getUserName(user))}
+                  </div>
+
+                  <span class="badge cost">
+                    ${formatNumber(user.schmeckles)}
+                  </span>
+                </div>
+
+                <div class="economy-user-meta">
+                  LOGIN:
+                  ${escapeHtml(user.twitch_login)}
+                  <br>
+
+                  LAST SEEN:
+                  ${escapeHtml(
+                    formatDate(user.last_seen_at),
+                  )}
+                </div>
+              </div>
+
+              <div class="economy-open-hint">
+                OPEN ACCOUNT &gt;
+              </div>
+            </button>
+          `,
+        )
+        .join("")
+    : `
+        <div class="empty">
+          *** NO OXNET USERS MATCHED THAT SEARCH.
+        </div>
+      `;
+
+  app.innerHTML = `
+    <div class="economy-toolbar">
+      <input
+        id="adminEconomySearch"
+        class="search"
+        type="text"
+        value="${escapeHtml(currentQuery)}"
+        placeholder="SEARCH TWITCH USER / ID..."
+        autocomplete="off"
+      >
+
+      <button
+        type="button"
+        class="find-btn"
+        data-economy-search
+      >
+        SEARCH
+      </button>
+
+      ${
+        currentQuery
+          ? `
+            <button
+              type="button"
+              class="find-btn"
+              data-economy-clear
+            >
+              CLEAR
+            </button>
+          `
+          : ""
+      }
+    </div>
+
+    <div class="economy-directory-header">
+      <div class="panel-header" style="flex:1;">
+        USER DIRECTORY
+      </div>
+
+      <div class="economy-count">
+        SHOWING:
+        ${sortedUsers.length.toLocaleString()}
+      </div>
+    </div>
+
+    <div class="economy-user-grid">
+      ${cards}
+    </div>
+  `;
+}
+
+async function loadUserDirectory(query = currentQuery) {
+  currentQuery = String(query || "").trim();
+
+  renderDirectoryLoading();
+
+  try {
+    const response = await adminFetch(
+      `/admin/economy/users?search=${encodeURIComponent(
+        currentQuery,
+      )}`,
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error || `HTTP ${response.status}`,
+      );
+    }
+
+    renderUserGrid(data.users || []);
+  } catch (error) {
+    console.error(
+      "Economy user directory failed.",
+      error,
+    );
+
+    const app = getApp();
+
+    if (!app) {
+      return;
+    }
+
+    app.innerHTML = `
       <div class="empty">
-        *** NO OXNET USERS MATCHED THAT SEARCH.
+        *** ${escapeHtml(error.message)}
+      </div>
+
+      <div style="margin-top:8px;">
+        <button
+          class="find-btn"
+          type="button"
+          data-economy-back-users
+        >
+          RETRY
+        </button>
       </div>
     `;
   }
-
-  return users
-    .map(
-      (user) => `
-        <div class="command-card">
-          <div class="command-title">
-            <div class="command-name">
-              ${escapeHtml(
-                user.twitch_display_name ||
-                user.twitch_login
-              )}
-            </div>
-
-            <span class="badge cost">
-              ${formatNumber(user.schmeckles)}
-              SCHMECKLES
-            </span>
-          </div>
-
-          <div class="command-desc">
-            LOGIN:
-            ${escapeHtml(user.twitch_login)}
-            <br>
-
-            TWITCH ID:
-            ${escapeHtml(user.twitch_user_id)}
-            <br>
-
-            LAST SEEN:
-            ${escapeHtml(formatDate(user.last_seen_at))}
-          </div>
-
-          <div style="margin-top:10px;">
-            <button
-              class="find-btn"
-              data-economy-open="${escapeHtml(
-                user.twitch_user_id
-              )}"
-            >
-              OPEN ACCOUNT
-            </button>
-          </div>
-        </div>
-      `,
-    )
-    .join("");
 }
 
 function renderTransactions(transactions) {
@@ -118,7 +263,12 @@ function renderTransactions(transactions) {
       const delta = Number(tx.delta || 0);
 
       return `
-        <div class="command-card">
+        <div
+          class="
+            command-card
+            economy-transaction-card
+          "
+        >
           <div class="command-title">
             <div class="command-name">
               ${delta >= 0 ? "+" : ""}${formatNumber(delta)}
@@ -127,26 +277,33 @@ function renderTransactions(transactions) {
 
             <span class="badge">
               ${formatNumber(tx.balance_before)}
-              →
+              -&gt;
               ${formatNumber(tx.balance_after)}
             </span>
           </div>
 
-          <div class="command-desc">
-            REASON:
-            ${escapeHtml(tx.reason || "UNSPECIFIED")}
+          <div
+            class="
+              command-desc
+              economy-mini-desc
+            "
+          >
+            ${escapeHtml(
+              tx.reason ||
+              "UNSPECIFIED TRANSACTION",
+            )}
+
             <br>
 
-            SOURCE:
-            ${escapeHtml(tx.source || "UNKNOWN")}
-            <br>
+            ${escapeHtml(
+              tx.source ||
+              "UNKNOWN SOURCE",
+            )}
 
-            TIME:
-            ${escapeHtml(formatDate(tx.created_at))}
-            <br>
-
-            TX:
-            ${escapeHtml(tx.transaction_id)}
+            //
+            ${escapeHtml(
+              formatDate(tx.created_at),
+            )}
           </div>
         </div>
       `;
@@ -166,45 +323,72 @@ function renderGameRequests(requests) {
   return requests
     .map(
       (request) => `
-        <div class="command-card">
+        <div
+          class="
+            command-card
+            economy-game-card
+          "
+        >
           <div class="command-title">
             <div class="command-name">
-              ${escapeHtml(request.game_name)}
+              ${escapeHtml(
+                request.game_name ||
+                "UNKNOWN GAME",
+              )}
             </div>
 
             <span class="badge status">
               ${escapeHtml(
-                String(request.status || "UNKNOWN").toUpperCase()
+                String(
+                  request.status ||
+                  "UNKNOWN",
+                ).toUpperCase(),
               )}
             </span>
           </div>
 
-          <div class="command-desc">
-            PLATFORM:
-            ${escapeHtml(request.platform || "UNKNOWN")}
-            <br>
-
-            REQUEST CODE:
-            ${escapeHtml(request.request_code ?? "---")}
-            <br>
-
-            COST:
-            ${formatNumber(request.cost_paid)}
-            SCHMECKLES
-            <br>
-
-            REFUND:
+          <div
+            class="
+              command-desc
+              economy-mini-desc
+            "
+          >
             ${escapeHtml(
-              String(
-                request.refund_status || "NONE"
-              ).toUpperCase()
+              request.platform ||
+              "UNKNOWN PLATFORM",
             )}
+
+            //
+            ${formatNumber(
+              request.cost_paid,
+            )}
+            SCHMECKLES
+
             <br>
 
             REQUESTED:
             ${escapeHtml(
-              formatDate(request.requested_at)
+              formatDate(
+                request.requested_at,
+              ),
             )}
+
+            ${
+              request.refund_status &&
+              String(
+                request.refund_status,
+              ).toLowerCase() !== "none"
+                ? `
+                  <br>
+                  REFUND:
+                  ${escapeHtml(
+                    String(
+                      request.refund_status,
+                    ).toUpperCase(),
+                  )}
+                `
+                : ""
+            }
           </div>
         </div>
       `,
@@ -212,193 +396,221 @@ function renderGameRequests(requests) {
     .join("");
 }
 
-function renderUserDetail(data) {
-  const container =
-    document.getElementById("adminEconomyDetail");
-
-  if (!container) {
-    return;
-  }
-
-  const user = data.user;
-
-  container.innerHTML = `
-    <div class="command-card">
-      <div class="panel-header">
-        ACCOUNT //
-        ${escapeHtml(
-          user.twitch_display_name ||
-          user.twitch_login
-        )}
+function statTile(label, value, extraClass = "") {
+  return `
+    <div class="status-box economy-stat">
+      <div class="economy-stat-label">
+        ${escapeHtml(label)}
       </div>
 
       <div
-        style="
-          display:grid;
-          grid-template-columns:
-            repeat(auto-fit,minmax(180px,1fr));
-          gap:8px;
-          margin-top:10px;
+        class="
+          economy-stat-value
+          ${extraClass}
         "
       >
-        <div class="status-box" style="margin:0;">
-          BALANCE
-          <br>
-          <strong style="font-size:22px;">
-            ${formatNumber(user.schmeckles)}
-          </strong>
-          SCHMECKLES
-        </div>
-
-        <div class="status-box" style="margin:0;">
-          TWITCH LOGIN
-          <br>
-          ${escapeHtml(user.twitch_login)}
-        </div>
-
-        <div class="status-box" style="margin:0;">
-          TWITCH ID
-          <br>
-          ${escapeHtml(user.twitch_user_id)}
-        </div>
-
-        <div class="status-box" style="margin:0;">
-          LAST SEEN
-          <br>
-          ${escapeHtml(formatDate(user.last_seen_at))}
-        </div>
-
-        <div class="status-box" style="margin:0;">
-          BANK SYNC
-          <br>
-          ${escapeHtml(formatDate(user.synced_at))}
-        </div>
-      </div>
-
-      <div
-        style="
-          margin-top:12px;
-          padding-top:12px;
-          border-top:1px solid #808080;
-        "
-      >
-        <div class="panel-header">
-          ADMIN BALANCE ADJUSTMENT
-        </div>
-
-        <div
-          style="
-            display:grid;
-            grid-template-columns:
-              minmax(120px,180px) 1fr;
-            gap:8px;
-            margin-top:10px;
-          "
-        >
-          <label>
-            AMOUNT
-            <br>
-            <input
-              id="adminEconomyAmount"
-              class="search"
-              type="number"
-              min="1"
-              step="1"
-              value="100"
-            >
-          </label>
-
-          <label>
-            REASON
-            <br>
-            <input
-              id="adminEconomyReason"
-              class="search"
-              type="text"
-              maxlength="250"
-              placeholder="Manual correction, contest prize, etc."
-            >
-          </label>
-        </div>
-
-        <div
-          style="
-            display:flex;
-            flex-wrap:wrap;
-            gap:8px;
-            margin-top:10px;
-          "
-        >
-          <button
-            class="find-btn"
-            data-economy-adjust="give"
-            data-twitch-user-id="${escapeHtml(
-              user.twitch_user_id
-            )}"
-          >
-            + GIVE
-          </button>
-
-          <button
-            class="find-btn"
-            data-economy-adjust="take"
-            data-twitch-user-id="${escapeHtml(
-              user.twitch_user_id
-            )}"
-          >
-            - TAKE
-          </button>
-        </div>
-
-        <div
-          id="adminEconomyAdjustStatus"
-          style="margin-top:8px;"
-        ></div>
-      </div>
-    </div>
-
-    <div style="margin-top:12px;">
-      <div class="panel-header">
-        SCHMECKLE LEDGER //
-        ${data.transactions.length} MOST RECENT
-      </div>
-
-      <div style="margin-top:8px;">
-        ${renderTransactions(data.transactions)}
-      </div>
-    </div>
-
-    <div style="margin-top:12px;">
-      <div class="panel-header">
-        GAME REQUEST HISTORY //
-        ${data.game_requests.length} MOST RECENT
-      </div>
-
-      <div style="margin-top:8px;">
-        ${renderGameRequests(data.game_requests)}
+        ${escapeHtml(value)}
       </div>
     </div>
   `;
 }
 
-async function openEconomyUser(twitchUserId) {
-  const detail =
-    document.getElementById("adminEconomyDetail");
+function renderAccount(data, notice = "") {
+  const app = getApp();
 
-  if (!detail) {
+  if (!app) {
     return;
   }
 
-  detail.innerHTML = `
-    <div class="status-box">
-      LOADING OXNET ACCOUNT...
+  const user = data.user;
+  const userName = getUserName(user);
+
+  app.innerHTML = `
+    <div class="economy-account-toolbar">
+      <button
+        type="button"
+        class="find-btn"
+        data-economy-back-users
+      >
+        &lt; USERS
+      </button>
+
+      <div
+        class="
+          panel-header
+          economy-account-title
+        "
+      >
+        ACCOUNT //
+        ${escapeHtml(userName)}
+      </div>
+    </div>
+
+    ${
+      notice
+        ? `
+          <div
+            class="
+              status-box
+              economy-notice
+            "
+            style="margin-top:0;"
+          >
+            ${escapeHtml(notice)}
+          </div>
+        `
+        : ""
+    }
+
+    <div class="economy-stat-grid">
+      ${statTile(
+        "BALANCE",
+        `${formatNumber(
+          user.schmeckles,
+        )} SCHMECKLES`,
+        "economy-balance-value",
+      )}
+
+      ${statTile(
+        "TWITCH LOGIN",
+        user.twitch_login || "---",
+      )}
+
+      ${statTile(
+        "TWITCH ID",
+        user.twitch_user_id || "---",
+      )}
+
+      ${statTile(
+        "LAST SEEN",
+        formatDate(user.last_seen_at),
+      )}
+
+      ${statTile(
+        "BANK SYNC",
+        formatDate(user.synced_at),
+      )}
+    </div>
+
+    <div
+      class="
+        command-card
+        economy-adjustment
+      "
+    >
+      <div class="panel-header">
+        ADMIN BALANCE ADJUSTMENT
+      </div>
+
+      <div class="economy-adjust-grid">
+        <label>
+          AMOUNT
+          <br>
+
+          <input
+            id="adminEconomyAmount"
+            class="search"
+            type="number"
+            min="1"
+            step="1"
+            value="100"
+          >
+        </label>
+
+        <label>
+          REASON
+          <br>
+
+          <input
+            id="adminEconomyReason"
+            class="search"
+            type="text"
+            maxlength="250"
+            placeholder="Manual correction, contest prize, etc."
+          >
+        </label>
+      </div>
+
+      <div class="economy-adjust-actions">
+        <button
+          type="button"
+          class="find-btn"
+          data-economy-adjust="give"
+          data-twitch-user-id="${escapeHtml(
+            user.twitch_user_id,
+          )}"
+        >
+          + GIVE
+        </button>
+
+        <button
+          type="button"
+          class="find-btn"
+          data-economy-adjust="take"
+          data-twitch-user-id="${escapeHtml(
+            user.twitch_user_id,
+          )}"
+        >
+          - TAKE
+        </button>
+      </div>
+
+      <div
+        id="adminEconomyAdjustStatus"
+        style="margin-top:8px;"
+      ></div>
+    </div>
+
+    <div class="economy-history-grid">
+      <div class="economy-history-column">
+        <div class="panel-header">
+          SCHMECKLE LEDGER //
+          ${data.transactions.length}
+        </div>
+
+        <div class="economy-scroll">
+          ${renderTransactions(
+            data.transactions,
+          )}
+        </div>
+      </div>
+
+      <div class="economy-history-column">
+        <div class="panel-header">
+          GAME REQUEST HISTORY //
+          ${data.game_requests.length}
+        </div>
+
+        <div class="economy-scroll">
+          ${renderGameRequests(
+            data.game_requests,
+          )}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+async function openEconomyUser(
+  twitchUserId,
+  notice = "",
+) {
+  const app = getApp();
+
+  if (!app) {
+    return;
+  }
+
+  app.innerHTML = `
+    <div class="status-box" style="margin:0;">
+      OPENING OXNET ACCOUNT...
     </div>
   `;
 
   try {
     const response = await adminFetch(
       `/admin/economy/user?twitch_user_id=${encodeURIComponent(
-        twitchUserId
+        twitchUserId,
       )}`,
     );
 
@@ -410,62 +622,26 @@ async function openEconomyUser(twitchUserId) {
       );
     }
 
-    renderUserDetail(data);
+    renderAccount(data, notice);
   } catch (error) {
     console.error(
-      "Economy user detail failed.",
+      "Economy account failed.",
       error,
     );
 
-    detail.innerHTML = `
+    app.innerHTML = `
       <div class="empty">
         *** ${escapeHtml(error.message)}
       </div>
-    `;
-  }
-}
 
-async function searchEconomyUsers(query = "") {
-  const results =
-    document.getElementById("adminEconomyResults");
-
-  if (!results) {
-    return;
-  }
-
-  results.innerHTML = `
-    <div class="status-box">
-      SEARCHING OXNET BANK...
-    </div>
-  `;
-
-  try {
-    const response = await adminFetch(
-      `/admin/economy/users?search=${encodeURIComponent(
-        query
-      )}`,
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(
-        data.error || `HTTP ${response.status}`,
-      );
-    }
-
-    results.innerHTML = renderUserRows(
-      data.users || [],
-    );
-  } catch (error) {
-    console.error(
-      "Economy search failed.",
-      error,
-    );
-
-    results.innerHTML = `
-      <div class="empty">
-        *** ${escapeHtml(error.message)}
+      <div style="margin-top:8px;">
+        <button
+          type="button"
+          class="find-btn"
+          data-economy-back-users
+        >
+          &lt; USERS
+        </button>
       </div>
     `;
   }
@@ -493,7 +669,10 @@ async function applyAdjustment(button) {
       "adminEconomyAdjustStatus",
     );
 
-  const amount = Number(amountInput?.value);
+  const amount = Number(
+    amountInput?.value,
+  );
+
   const reason = String(
     reasonInput?.value || "",
   ).trim();
@@ -502,20 +681,26 @@ async function applyAdjustment(button) {
     !Number.isInteger(amount) ||
     amount <= 0
   ) {
-    status.innerHTML = `
-      <div class="empty">
-        *** ENTER A POSITIVE WHOLE NUMBER.
-      </div>
-    `;
+    if (status) {
+      status.innerHTML = `
+        <div class="empty">
+          *** ENTER A POSITIVE WHOLE NUMBER.
+        </div>
+      `;
+    }
+
     return;
   }
 
   if (!reason) {
-    status.innerHTML = `
-      <div class="empty">
-        *** ADMIN REASON REQUIRED.
-      </div>
-    `;
+    if (status) {
+      status.innerHTML = `
+        <div class="empty">
+          *** ADMIN REASON REQUIRED.
+        </div>
+      `;
+    }
+
     return;
   }
 
@@ -525,11 +710,13 @@ async function applyAdjustment(button) {
       : amount;
 
   const confirmed = window.confirm(
-    `${
-      delta > 0 ? "GIVE" : "TAKE"
-    } ${formatNumber(amount)} SCHMECKLES ${
-      delta > 0 ? "TO" : "FROM"
-    } THIS ACCOUNT?\n\nREASON: ${reason}`,
+    [
+      `${
+        delta > 0 ? "GIVE" : "TAKE"
+      } ${formatNumber(amount)} SCHMECKLES`,
+      "",
+      `REASON: ${reason}`,
+    ].join("\n"),
   );
 
   if (!confirmed) {
@@ -538,8 +725,10 @@ async function applyAdjustment(button) {
 
   button.disabled = true;
 
-  status.textContent =
-    "WRITING LEDGER TRANSACTION...";
+  if (status) {
+    status.textContent =
+      "WRITING LEDGER TRANSACTION...";
+  }
 
   try {
     const response = await adminFetch(
@@ -562,12 +751,13 @@ async function applyAdjustment(button) {
       );
     }
 
-    await openEconomyUser(twitchUserId);
-
-    await searchEconomyUsers(
-      document.getElementById(
-        "adminEconomySearch",
-      )?.value || "",
+    await openEconomyUser(
+      twitchUserId,
+      `${
+        delta > 0 ? "GAVE" : "TOOK"
+      } ${formatNumber(
+        amount,
+      )} SCHMECKLES // LEDGER UPDATED`,
     );
   } catch (error) {
     console.error(
@@ -575,100 +765,122 @@ async function applyAdjustment(button) {
       error,
     );
 
-    status.innerHTML = `
-      <div class="empty">
-        *** ${escapeHtml(error.message)}
-      </div>
-    `;
+    if (status) {
+      status.innerHTML = `
+        <div class="empty">
+          *** ${escapeHtml(error.message)}
+        </div>
+      `;
+    }
 
     button.disabled = false;
   }
 }
 
 function bindEconomyUi() {
-  const search =
-    document.getElementById("adminEconomySearch");
+  const app = getApp();
 
-  const searchButton =
-    document.getElementById(
-      "adminEconomySearchBtn",
-    );
-
-  const results =
-    document.getElementById(
-      "adminEconomyResults",
-    );
-
-  const detail =
-    document.getElementById(
-      "adminEconomyDetail",
-    );
-
-  if (
-    !search ||
-    !searchButton ||
-    !results ||
-    !detail
-  ) {
+  if (!app || app.dataset.bound === "true") {
     return;
   }
 
-  searchButton.addEventListener(
+  app.dataset.bound = "true";
+
+  app.addEventListener(
     "click",
-    () => {
-      searchEconomyUsers(search.value);
+    async (event) => {
+      const searchButton =
+        event.target.closest(
+          "[data-economy-search]",
+        );
+
+      if (searchButton) {
+        const search =
+          document.getElementById(
+            "adminEconomySearch",
+          );
+
+        await loadUserDirectory(
+          search?.value || "",
+        );
+
+        return;
+      }
+
+      const clearButton =
+        event.target.closest(
+          "[data-economy-clear]",
+        );
+
+      if (clearButton) {
+        currentQuery = "";
+
+        await loadUserDirectory("");
+
+        return;
+      }
+
+      const backButton =
+        event.target.closest(
+          "[data-economy-back-users]",
+        );
+
+      if (backButton) {
+        await loadUserDirectory(
+          currentQuery,
+        );
+
+        return;
+      }
+
+      const userCard =
+        event.target.closest(
+          "[data-economy-open]",
+        );
+
+      if (userCard) {
+        await openEconomyUser(
+          userCard.dataset.economyOpen,
+        );
+
+        return;
+      }
+
+      const adjustment =
+        event.target.closest(
+          "[data-economy-adjust]",
+        );
+
+      if (adjustment) {
+        await applyAdjustment(
+          adjustment,
+        );
+      }
     },
   );
 
-  search.addEventListener(
+  app.addEventListener(
     "keydown",
-    (event) => {
-      if (event.key === "Enter") {
-        searchEconomyUsers(search.value);
+    async (event) => {
+      if (
+        event.key === "Enter" &&
+        event.target?.id ===
+          "adminEconomySearch"
+      ) {
+        event.preventDefault();
+
+        await loadUserDirectory(
+          event.target.value,
+        );
       }
-    },
-  );
-
-  results.addEventListener(
-    "click",
-    (event) => {
-      const button = event.target.closest(
-        "[data-economy-open]",
-      );
-
-      if (!button) {
-        return;
-      }
-
-      openEconomyUser(
-        button.dataset.economyOpen,
-      );
-    },
-  );
-
-  detail.addEventListener(
-    "click",
-    (event) => {
-      const button = event.target.closest(
-        "[data-economy-adjust]",
-      );
-
-      if (!button) {
-        return;
-      }
-
-      applyAdjustment(button);
     },
   );
 }
 
-let economyBound = false;
-
 export async function loadAdminEconomy() {
-  if (!economyBound) {
-    bindEconomyUi();
-    economyBound = true;
-  }
+  bindEconomyUi();
 
-  await searchEconomyUsers("");
+  await loadUserDirectory(
+    currentQuery,
+  );
 }

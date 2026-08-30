@@ -218,69 +218,209 @@
                     OXNET BANK // ECONOMY MANAGEMENT
                   </div>
 
-                  <div style="padding: 12px">
-                    <div
-                      style="
-                        display: flex;
-                        flex-wrap: wrap;
-                        gap: 8px;
-                        margin-bottom: 12px;
-                      "
-                    >
-                      <input
-                        id="adminEconomySearch"
-                        class="search"
-                        type="text"
-                        placeholder="SEARCH TWITCH USER / ID..."
-                        style="flex: 1; min-width: 220px"
-                      />
+                  <style>
+                    #adminViewEconomy .economy-shell {
+                      padding: 10px;
+                    }
 
-                      <button
-                        class="find-btn"
-                        id="adminEconomySearchBtn"
-                      >
-                        SEARCH
-                      </button>
-                    </div>
+                    #adminViewEconomy .economy-toolbar {
+                      display: flex;
+                      flex-wrap: wrap;
+                      align-items: center;
+                      gap: 6px;
+                      margin-bottom: 10px;
+                    }
 
-                    <div class="status-box" style="margin-top: 0">
-                      OXNET CANONICAL BANK //
-                      NEON IS SOURCE OF TRUTH
-                    </div>
+                    #adminViewEconomy .economy-toolbar .search {
+                      flex: 1;
+                      min-width: 240px;
+                    }
 
-                    <div
-                      style="
-                        display: grid;
+                    #adminViewEconomy .economy-directory-header {
+                      display: flex;
+                      align-items: center;
+                      justify-content: space-between;
+                      gap: 8px;
+                      margin-bottom: 8px;
+                    }
+
+                    #adminViewEconomy .economy-count {
+                      font-family: "Courier New", monospace;
+                      font-size: 12px;
+                    }
+
+                    #adminViewEconomy .economy-user-grid {
+                      display: grid;
+                      grid-template-columns:
+                        repeat(auto-fill, minmax(210px, 1fr));
+                      gap: 8px;
+                    }
+
+                    #adminViewEconomy .economy-user-card {
+                      width: 100%;
+                      min-height: 126px;
+                      margin: 0;
+                      padding: 10px;
+                      text-align: left;
+                      font: inherit;
+                      cursor: pointer;
+                      display: flex;
+                      flex-direction: column;
+                      justify-content: space-between;
+                    }
+
+                    #adminViewEconomy .economy-user-card:hover,
+                    #adminViewEconomy .economy-user-card:focus {
+                      outline: 2px solid #000080;
+                      outline-offset: -2px;
+                    }
+
+                    #adminViewEconomy .economy-user-name {
+                      font-size: 17px;
+                      line-height: 1.1;
+                      overflow-wrap: anywhere;
+                    }
+
+                    #adminViewEconomy .economy-user-meta {
+                      margin-top: 8px;
+                      font-family: "Courier New", monospace;
+                      font-size: 12px;
+                      line-height: 1.35;
+                    }
+
+                    #adminViewEconomy .economy-open-hint {
+                      margin-top: 8px;
+                      font-family: "Courier New", monospace;
+                      font-size: 11px;
+                      font-weight: bold;
+                    }
+
+                    #adminViewEconomy .economy-account-toolbar {
+                      display: flex;
+                      align-items: center;
+                      gap: 8px;
+                      margin-bottom: 8px;
+                    }
+
+                    #adminViewEconomy .economy-account-title {
+                      flex: 1;
+                      margin: 0;
+                      min-height: 0;
+                    }
+
+                    #adminViewEconomy .economy-stat-grid {
+                      display: grid;
+                      grid-template-columns:
+                        repeat(auto-fit, minmax(150px, 1fr));
+                      gap: 6px;
+                      margin-bottom: 10px;
+                    }
+
+                    #adminViewEconomy .economy-stat {
+                      margin: 0;
+                      min-height: 62px;
+                      padding: 8px;
+                    }
+
+                    #adminViewEconomy .economy-stat-label {
+                      font-size: 11px;
+                      margin-bottom: 5px;
+                    }
+
+                    #adminViewEconomy .economy-stat-value {
+                      font-size: 13px;
+                      font-weight: bold;
+                      overflow-wrap: anywhere;
+                    }
+
+                    #adminViewEconomy .economy-balance-value {
+                      font-size: 22px;
+                    }
+
+                    #adminViewEconomy .economy-adjustment {
+                      padding: 8px;
+                      margin-bottom: 10px;
+                    }
+
+                    #adminViewEconomy .economy-adjust-grid {
+                      display: grid;
+                      grid-template-columns:
+                        minmax(100px, 160px) minmax(220px, 1fr);
+                      gap: 8px;
+                      margin-top: 8px;
+                    }
+
+                    #adminViewEconomy .economy-adjust-actions {
+                      display: flex;
+                      flex-wrap: wrap;
+                      gap: 6px;
+                      margin-top: 8px;
+                    }
+
+                    #adminViewEconomy .economy-history-grid {
+                      display: grid;
+                      grid-template-columns:
+                        minmax(0, 1.15fr)
+                        minmax(0, 0.85fr);
+                      gap: 10px;
+                    }
+
+                    #adminViewEconomy .economy-history-column {
+                      min-width: 0;
+                    }
+
+                    #adminViewEconomy .economy-scroll {
+                      max-height: 430px;
+                      overflow-y: auto;
+                      margin-top: 6px;
+                      padding-right: 2px;
+                    }
+
+                    #adminViewEconomy .economy-transaction-card,
+                    #adminViewEconomy .economy-game-card {
+                      margin-bottom: 6px;
+                      padding: 8px;
+                    }
+
+                    #adminViewEconomy .economy-transaction-card:last-child,
+                    #adminViewEconomy .economy-game-card:last-child {
+                      margin-bottom: 0;
+                    }
+
+                    #adminViewEconomy .economy-mini-desc {
+                      font-size: 12px;
+                      line-height: 1.35;
+                    }
+
+                    #adminViewEconomy .economy-notice {
+                      margin-bottom: 8px;
+                    }
+
+                    @media (max-width: 900px) {
+                      #adminViewEconomy .economy-history-grid {
+                        grid-template-columns: 1fr;
+                      }
+                    }
+
+                    @media (max-width: 700px) {
+                      #adminViewEconomy .economy-user-grid {
                         grid-template-columns:
-                          minmax(260px, 0.8fr)
-                          minmax(340px, 1.4fr);
-                        gap: 12px;
-                        margin-top: 12px;
-                        align-items: start;
-                      "
-                    >
-                      <div>
-                        <div class="panel-header">USERS</div>
+                          repeat(auto-fill, minmax(170px, 1fr));
+                      }
 
-                        <div
-                          id="adminEconomyResults"
-                          style="margin-top: 8px"
-                        >
-                          OPEN ECONOMY TO LOAD USERS...
-                        </div>
-                      </div>
+                      #adminViewEconomy .economy-adjust-grid {
+                        grid-template-columns: 1fr;
+                      }
+                    }
+                  </style>
 
-                      <div>
-                        <div id="adminEconomyDetail">
-                          <div class="empty">
-                            SELECT A USER ACCOUNT.
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                  <div
+                    id="adminEconomyApp"
+                    class="economy-shell"
+                  >
+                    LOADING OXNET BANK...
                   </div>
                 </div>
-
                 <!-- SUBMISSIONS -->
 
                 <div class="panel admin-view" id="adminViewSubmissions" hidden>
@@ -338,6 +478,6 @@
       </div>
     </div>
 
-    <script type="module" src="./admin.js?v=20260830-000549"></script>
+    <script type="module" src="./admin.js?v=20260830-013403"></script>
   </body>
 </html>

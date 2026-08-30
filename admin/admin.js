@@ -1,6 +1,6 @@
 import { API_URL, SESSION_KEY } from '../js/config.js'
 import { loadAdminCommands } from './admin-commands-ui.js'
-import { loadAdminEconomy } from './admin-economy-ui.js'
+import { loadAdminEconomy } from './admin-economy-ui.js?v=20260830-013403'
 
 function getSession () {
   return localStorage.getItem(SESSION_KEY)
