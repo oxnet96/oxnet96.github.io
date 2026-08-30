@@ -1,5 +1,6 @@
 import { API_URL, SESSION_KEY } from '../js/config.js'
 import { loadAdminCommands } from './admin-commands-ui.js'
+import { loadAdminEconomy } from './admin-economy-ui.js'
 
 function getSession () {
   return localStorage.getItem(SESSION_KEY)
@@ -97,6 +98,9 @@ function bindNavigation () {
 
       if (target === 'commands') {
         await loadAdminCommands()
+      }
+      if (target === 'economy') {
+        await loadAdminEconomy()
       }
 
       if (target === 'submissions') {

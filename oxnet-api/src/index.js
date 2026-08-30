@@ -11,6 +11,7 @@ import { handleAdminGameRoutes } from "./routes/admin-games.js";
 import { handleSchmeckleJobRoutes } from "./routes/schmeckle-jobs.js";
 import { handleAdminLibraryRoutes } from "./routes/admin-library.js";
 import { handleAdminCommandRoutes } from "./routes/admin-commands.js";
+import { handleAdminEconomyRoutes } from "./routes/admin-economy.js";
 import { handleJcVideoSubmissionRoutes } from "./routes/jc-video-submissions.js";
 
 export default {
@@ -45,6 +46,7 @@ export default {
       handleAdminGameRoutes,
       handleAdminLibraryRoutes,
       handleAdminCommandRoutes,
+      handleAdminEconomyRoutes,
     ];
 
     for (const handler of handlers) {

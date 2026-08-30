@@ -115,6 +115,9 @@
                   <button class="nav-btn" data-admin-view="commands">
                     COMMANDS
                   </button>
+                  <button class="nav-btn" data-admin-view="economy">
+                    ECONOMY
+                  </button>
 
                   <button class="nav-btn" data-admin-view="submissions">
                     SUBMISSIONS
@@ -208,6 +211,76 @@
                   <div style="padding: 12px">SFX MANAGEMENT COMING NEXT.</div>
                 </div>
 
+                <!-- ECONOMY -->
+
+                <div class="panel admin-view" id="adminViewEconomy" hidden>
+                  <div class="panel-header">
+                    OXNET BANK // ECONOMY MANAGEMENT
+                  </div>
+
+                  <div style="padding: 12px">
+                    <div
+                      style="
+                        display: flex;
+                        flex-wrap: wrap;
+                        gap: 8px;
+                        margin-bottom: 12px;
+                      "
+                    >
+                      <input
+                        id="adminEconomySearch"
+                        class="search"
+                        type="text"
+                        placeholder="SEARCH TWITCH USER / ID..."
+                        style="flex: 1; min-width: 220px"
+                      />
+
+                      <button
+                        class="find-btn"
+                        id="adminEconomySearchBtn"
+                      >
+                        SEARCH
+                      </button>
+                    </div>
+
+                    <div class="status-box" style="margin-top: 0">
+                      OXNET CANONICAL BANK //
+                      NEON IS SOURCE OF TRUTH
+                    </div>
+
+                    <div
+                      style="
+                        display: grid;
+                        grid-template-columns:
+                          minmax(260px, 0.8fr)
+                          minmax(340px, 1.4fr);
+                        gap: 12px;
+                        margin-top: 12px;
+                        align-items: start;
+                      "
+                    >
+                      <div>
+                        <div class="panel-header">USERS</div>
+
+                        <div
+                          id="adminEconomyResults"
+                          style="margin-top: 8px"
+                        >
+                          OPEN ECONOMY TO LOAD USERS...
+                        </div>
+                      </div>
+
+                      <div>
+                        <div id="adminEconomyDetail">
+                          <div class="empty">
+                            SELECT A USER ACCOUNT.
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <!-- SUBMISSIONS -->
 
                 <div class="panel admin-view" id="adminViewSubmissions" hidden>
@@ -265,6 +338,6 @@
       </div>
     </div>
 
-    <script type="module" src="./admin.js?v=20260827-5"></script>
+    <script type="module" src="./admin.js?v=20260830-000549"></script>
   </body>
 </html>
